@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gerador de Orçamentos - Soluções Elétricas</title>
+    
+    <!-- Biblioteca necessária para converter HTML em PDF diretamente no celular -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         :root {
             --primary-color: #0f172a;
             --secondary-color: #2563eb;
             --success-color: #10b981;
+            --danger-color: #ef4444;
             --bg-color: #f1f5f9;
             --card-bg: #ffffff;
             --text-color: #1e293b;
@@ -43,7 +48,7 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Menu de Boas-Vindas (Tela Inicial) */
+        /* Menu de Boas-Vindas */
         .welcome-screen {
             display: flex;
             flex-direction: column;
@@ -110,19 +115,42 @@
             color: #64748b;
         }
 
-        /* Topo do Formulário */
-        .header-table {
-            width: 100%;
-            margin-bottom: 20px;
+        /* Cabeçalho Totalmente Flexível */
+        .header-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
             border-bottom: 3px solid var(--primary-color);
-            padding-bottom: 12px;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
         }
 
         .header-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             text-transform: uppercase;
             color: var(--primary-color);
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .header-right p {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
         }
 
         /* Barra de Progresso / Passos */
@@ -220,6 +248,23 @@
             gap: 4px;
         }
 
+        .form-group-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group-row input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
         label {
             font-size: 11px;
             font-weight: 700;
@@ -231,7 +276,7 @@
             padding: 12px 10px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            font-size: 16px; /* Evita zoom automático no iOS */
+            font-size: 16px;
             outline: none;
             background-color: #f8fafc;
             width: 100%;
@@ -242,7 +287,7 @@
             background-color: #fff;
         }
 
-        /* Suporte a Rolagem em Tabelas no Mobile */
+        /* Tabelas */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
@@ -256,7 +301,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
-            min-width: 600px; /* Garante estrutura legível sob rolagem */
+            min-width: 600px;
         }
 
         th {
@@ -282,7 +327,7 @@
             padding-right: 12px;
         }
 
-        /* Botões Aumentados para Celular */
+        /* Botões */
         .btn {
             background-color: var(--secondary-color);
             color: white;
@@ -309,41 +354,11 @@
         }
 
         .btn-danger {
-            background-color: #ef4444;
-            padding: 8px 12px;
+            background-color: var(--danger-color);
         }
 
-        /* Resumos e Rodapés */
-        .footer-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .totals-box {
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            background-color: #f8fafc;
-            padding: 15px;
-        }
-
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            font-size: 13px;
-            border-bottom: 1px dashed var(--border-color);
-        }
-
-        .total-row.highlight {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--secondary-color);
-            border-bottom: none;
-            border-top: 2px solid var(--border-color);
-            padding-top: 12px;
-            margin-top: 8px;
+        .btn-danger:hover, .btn-danger:active {
+            background-color: #dc2626;
         }
 
         /* Rodapé de Ações de Navegação */
@@ -366,7 +381,85 @@
             flex: 1;
         }
 
-        /* Media Queries para Computador (PC) */
+        /* ================= ESTILOS DO RESUMO (PRONTO PARA PDF) ================= */
+        .pdf-preview {
+            background: #fff;
+            color: #000;
+            padding: 20px;
+            border: 1px solid #000;
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .pdf-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pdf-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .pdf-section-title {
+            background-color: #000;
+            color: #fff;
+            font-weight: bold;
+            padding: 4px 8px;
+            text-transform: uppercase;
+            font-size: 11px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .pdf-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .pdf-table th {
+            background-color: #f2f2f2;
+            color: #000;
+            border: 1px solid #000;
+            font-size: 10px;
+            padding: 6px;
+        }
+
+        .pdf-table td {
+            border: 1px solid #000;
+            padding: 6px;
+            font-size: 11px;
+            background-color: transparent;
+        }
+
+        .pdf-totals {
+            margin-left: auto;
+            width: 300px;
+            border: 1px solid #000;
+            margin-top: 15px;
+        }
+
+        .pdf-totals-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 8px;
+            border-bottom: 1px dashed #000;
+        }
+
+        .pdf-totals-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        /* Media Queries Computador (PC) */
         @media (min-width: 768px) {
             .container {
                 padding: 30px;
@@ -376,6 +469,15 @@
             }
             .welcome-title {
                 font-size: 28px;
+            }
+            .header-container {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .header-right {
+                text-align: right;
+                align-items: flex-end;
             }
             .menu-buttons {
                 grid-template-columns: 1fr 1fr;
@@ -387,11 +489,8 @@
             .grid-4 {
                 grid-template-columns: 2fr 1fr 1fr 1fr;
             }
-            .footer-grid {
-                grid-template-columns: 1.2fr 1fr;
-            }
             input, textarea, select {
-                font-size: 13px; /* Tamanho normal no Desktop */
+                font-size: 13px;
                 padding: 10px;
             }
             .btn {
@@ -410,7 +509,7 @@
             }
         }
 
-        /* Configuração de Impressão (PDF) */
+        /* Configurações de Impressão nativa */
         @media print {
             body {
                 background: white;
@@ -426,32 +525,14 @@
                 display: none !important;
             }
             .page {
-                display: none;
+                display: none !important;
             }
-            #page-1, #page-2, #page-3 {
+            #page-4 {
                 display: block !important;
             }
-            #page-welcome, #page-4 {
-                display: none !important;
-            }
-            .step-indicator {
-                display: none !important;
-            }
-            input, textarea {
+            .pdf-preview {
                 border: none;
-                padding: 2px 0;
-                background: transparent;
-                resize: none;
-            }
-            .totals-box {
-                background-color: transparent;
-            }
-            .table-responsive {
-                border: none;
-                overflow-x: visible;
-            }
-            table {
-                min-width: 100%;
+                padding: 0;
             }
         }
     </style>
@@ -460,6 +541,7 @@
 
 <div class="container">
     
+    <!-- ================= TELA INICIAL (MENU PRINCIPAL) ================= -->
     <div class="page active" id="page-welcome">
         <div class="welcome-screen">
             <div class="welcome-title">Soluções Elétricas</div>
@@ -480,21 +562,26 @@
         </div>
     </div>
 
+    <!-- Interface Principal do Formulário -->
     <div id="main-interface" style="display: none;">
         
-        <table class="header-table">
-            <tr>
-                <td style="border: none; padding: 0; background: none;">
-                    <div class="header-title">Orçamento Técnico</div>
-                </td>
-                <td style="border: none; padding: 0; text-align: right; font-size: 13px; background: none;">
-                    <p><strong>Nº Doc:</strong> <span id="doc-id">--</span></p>
-                    <p><strong>Data:</strong> <span id="current-date">--/--/----</span></p>
-                    <p style="margin-top: 4px;"><strong>Validade:</strong> <input type="text" id="validity" value="10 dias" style="width: 75px; text-align: right; background: transparent; font-weight: bold; border: none; padding: 0; font-size: 13px; display: inline;"></p>
-                </td>
-            </tr>
-        </table>
+        <!-- Cabeçalho Principal Flexível -->
+        <div class="header-container">
+            <div class="header-left">
+                <div class="header-title">Orçamento Técnico</div>
+                <button class="btn btn-secondary no-print" onclick="backToMainMenu()" style="padding: 6px 12px; font-size: 11px;">🏠 Menu Principal</button>
+            </div>
+            <div class="header-right">
+                <p><strong>Nº Doc:</strong> <span id="doc-id">--</span></p>
+                <p><strong>Data:</strong> <span id="current-date">--/--/----</span></p>
+                <p style="margin-top: 4px;">
+                    <strong>Validade:</strong> 
+                    <input type="text" id="validity" value="10 dias" style="width: 75px; text-align: right; background: transparent; font-weight: bold; border: none; padding: 0; font-size: 13px; display: inline;">
+                </p>
+            </div>
+        </div>
 
+        <!-- Barra de Abas / Passos -->
         <div class="step-indicator no-print">
             <div class="step" id="step-1" onclick="navigateToStep(1)">1
                 <span class="step-label">Cliente</span>
@@ -503,13 +590,14 @@
                 <span class="step-label">Itens</span>
             </div>
             <div class="step" id="step-3" onclick="navigateToStep(3)">3
-                <span class="step-label">Resumo</span>
+                <span class="step-label">Deslocamento</span>
             </div>
-            <div class="step" id="step-4" onclick="navigateToStep(4)" style="background-color: var(--success-color); color: white;">📂
-                <span class="step-label" style="color: var(--success-color);">Salvos</span>
+            <div class="step" id="step-4" onclick="navigateToStep(4)">4
+                <span class="step-label">Resumo</span>
             </div>
         </div>
 
+        <!-- ================= PÁGINA 1: DADOS DO CLIENTE ================= -->
         <div class="page" id="page-1">
             <div class="section-title">Dados do Cliente</div>
             <div class="grid-3">
@@ -556,7 +644,9 @@
             </div>
         </div>
 
+        <!-- ================= PÁGINA 2: MATERIAIS E MÃO DE OBRA ================= -->
         <div class="page" id="page-2">
+            <!-- Seção de Materiais -->
             <div class="section-title">Materiais</div>
             <div class="table-responsive">
                 <table id="materials-table">
@@ -584,6 +674,7 @@
             </div>
             <button class="btn no-print" onclick="addMaterialRow()" style="margin-bottom: 25px;">+ Adicionar Material</button>
 
+            <!-- Seção de Mão de Obra -->
             <div class="section-title">Mão de Obra / Serviços</div>
             <div class="table-responsive">
                 <table id="labor-table">
@@ -612,70 +703,198 @@
             <button class="btn no-print" onclick="addLaborRow()">+ Adicionar Serviço</button>
         </div>
 
+        <!-- ================= PÁGINA 3: DESLOCAMENTO ================= -->
         <div class="page" id="page-3">
-            <div class="section-title">Deslocamento</div>
-            <div class="grid-4">
-                <div class="form-group">
-                    <label>Origem</label>
-                    <input type="text" id="travel-origin" value="CARUARU">
+            <div class="section-title">Deslocamento / Viagem</div>
+            
+            <div class="form-group-row">
+                <input type="checkbox" id="travel-active" checked onchange="toggleTravelActive()">
+                <label for="travel-active" style="font-size: 13px; cursor: pointer;">INCLUIR DESLOCAMENTO NO ORÇAMENTO FINAL</label>
+            </div>
+
+            <div id="travel-inputs-container">
+                <div class="grid-4">
+                    <div class="form-group">
+                        <label>Origem</label>
+                        <input type="text" id="travel-origin" value="CARUARU">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço Serviço / N°</label>
+                        <input type="text" id="travel-dest" placeholder="Ex: Av. Agamenon Magalhães, 100">
+                    </div>
+                    <div class="form-group">
+                        <label>KM (Ida e Volta)</label>
+                        <input type="number" id="travel-km" value="0" min="0" step="0.1" oninput="calculateTravel()">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor por KM (R$)</label>
+                        <input type="number" id="travel-rate" value="1.25" min="0" step="0.01" oninput="calculateTravel()">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Endereço Serviço / N°</label>
-                    <input type="text" id="travel-dest" placeholder="Ex: Av. Agamenon Magalhães, 100">
-                </div>
-                <div class="form-group">
-                    <label>KM (Ida e Volta)</label>
-                    <input type="number" id="travel-km" value="0" min="0" step="0.1" oninput="calculateTravel()">
-                </div>
-                <div class="form-group">
-                    <label>Valor por KM (R$)</label>
-                    <input type="number" id="travel-rate" value="1.25" min="0" step="0.01" oninput="calculateTravel()">
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px;">
+                    <button class="btn no-print" style="background-color: #0284c7;" onclick="openMap()">Abrir Rota no Mapa 🗺️</button>
+                    <div style="font-size: 14px; font-weight: bold;">
+                        Subtotal Deslocamento: <span id="travel-total" style="color: var(--secondary-color);">R$ 0,00</span>
+                    </div>
                 </div>
             </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px;">
-                <button class="btn no-print" style="background-color: #0284c7;" onclick="openMap()">Abrir Rota no Mapa 🗺️</button>
-                <div style="font-size: 14px; font-weight: bold;">
-                    Total Deslocamento: <span id="travel-total" style="color: var(--secondary-color);">R$ 0,00</span>
-                </div>
-            </div>
-
-            <div class="footer-grid">
+            <div class="section-title">Descontos e Observações Gerais</div>
+            <div class="grid-3" style="align-items: center;">
                 <div class="form-group">
-                    <label>Observações Adicionais</label>
-                    <textarea id="obs" rows="6" placeholder="Ex: Condições de pagamento, prazos de entrega, etc..."></textarea>
+                    <label>Desconto (%)</label>
+                    <input type="number" id="discount-percent" value="0" min="0" max="100" oninput="updateAllTotals()">
                 </div>
-
-                <div class="totals-box">
-                    <div class="total-row">
-                        <span>Total Material:</span>
-                        <span id="summary-material">R$ 0,00</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Total Mão de Obra:</span>
-                        <span id="summary-labor">R$ 0,00</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Total Deslocamento:</span>
-                        <span id="summary-travel">R$ 0,00</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Total Geral Bruto:</span>
-                        <span id="summary-gross">R$ 0,00</span>
-                    </div>
-                    <div class="total-row" style="align-items: center; padding: 4px 0;">
-                        <span>Desconto (%):</span>
-                        <input type="number" id="discount-percent" value="0" min="0" max="100" style="width: 75px; text-align: right; padding: 5px;" oninput="updateAllTotals()">
-                    </div>
-                    <div class="total-row highlight">
-                        <span>Valor Final:</span>
-                        <span id="summary-final">R$ 0,00</span>
-                    </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Observações do Orçamento</label>
+                    <textarea id="obs" rows="2" placeholder="Termos de pagamento, prazos de entrega, garantias..."></textarea>
                 </div>
             </div>
         </div>
 
+        <!-- ================= PÁGINA 4: RESUMO GERAL (ESPELHO DO PDF) ================= -->
         <div class="page" id="page-4">
+            <div class="no-print" style="background-color: #fffbeb; border: 1px solid #fef3c7; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 13px;">
+                ⚠️ <strong>Modo de Visualização do PDF:</strong> O bloco abaixo renderiza exatamente como o seu orçamento ficará impresso ou gerado no celular.
+            </div>
+
+            <!-- Área que será impressa ou convertida diretamente em PDF -->
+            <div class="pdf-preview" id="pdf-content">
+                <div class="pdf-header">
+                    <div>
+                        <h2 style="text-transform: uppercase; font-size: 18px; font-weight: 800;">Soluções Elétricas</h2>
+                        <p style="font-size: 10px; color: #555;">Serviços Técnicos e Instalações Profissionais</p>
+                    </div>
+                    <div style="text-align: right; font-size: 11px;">
+                        <p><strong>Nº Orçamento:</strong> #<span id="pdf-doc-id">--</span></p>
+                        <p><strong>Data de Emissão:</strong> <span id="pdf-current-date">--</span></p>
+                        <p><strong>Validade da Proposta:</strong> <span id="pdf-validity">--</span></p>
+                    </div>
+                </div>
+
+                <div class="pdf-section-title">Dados do Cliente</div>
+                <div class="pdf-grid">
+                    <div>
+                        <p><strong>Cliente:</strong> <span id="pdf-client-name">--</span></p>
+                        <p><strong>Empresa:</strong> <span id="pdf-client-company">--</span></p>
+                        <p><strong>CPF/CNPJ:</strong> <span id="pdf-client-document">--</span></p>
+                        <p><strong>WhatsApp:</strong> <span id="pdf-client-whatsapp">--</span></p>
+                    </div>
+                    <div>
+                        <p><strong>Endereço:</strong> <span id="pdf-client-address">--</span></p>
+                        <p><strong>Complemento:</strong> <span id="pdf-client-comp">--</span></p>
+                        <p><strong>CEP:</strong> <span id="pdf-client-cep">--</span></p>
+                        <p><strong>Fone Comercial:</strong> <span id="pdf-client-phone">--</span></p>
+                    </div>
+                </div>
+
+                <!-- Tabela de Materiais Dinâmica -->
+                <div id="pdf-materials-section">
+                    <div class="pdf-section-title">Materiais Aplicados</div>
+                    <table class="pdf-table" id="pdf-materials-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width: 45%;">Descrição do Material</th>
+                                <th style="width: 20%;">Marca</th>
+                                <th style="text-align: right; width: 15%;">Unitário</th>
+                                <th style="text-align: center; width: 10%;">Qtd</th>
+                                <th style="text-align: right; width: 15%;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tabela de Mão de Obra Dinâmica -->
+                <div id="pdf-labor-section">
+                    <div class="pdf-section-title">Serviços e Mão de Obra</div>
+                    <table class="pdf-table" id="pdf-labor-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width: 40%;">Serviço Executado</th>
+                                <th style="text-align: left; width: 30%;">Item/Descrição</th>
+                                <th style="text-align: right; width: 15%;">Unitário</th>
+                                <th style="text-align: center; width: 5%;">Qtd</th>
+                                <th style="text-align: right; width: 15%;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Preenchido via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Trajeto e Deslocamento Dinâmico -->
+                <div id="pdf-travel-section">
+                    <div class="pdf-section-title">Deslocamento Operacional</div>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; width: 35%;">Origem</th>
+                                <th style="text-align: left; width: 35%;">Destino de Execução</th>
+                                <th style="text-align: center; width: 15%;">KM Rodados</th>
+                                <th style="text-align: right; width: 15%;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span id="pdf-travel-origin">--</span></td>
+                                <td><span id="pdf-travel-dest">--</span></td>
+                                <td style="text-align: center;"><span id="pdf-travel-km">--</span> KM</td>
+                                <td style="text-align: right; font-weight: bold;"><span id="pdf-travel-total">--</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Resumo e Notas Finais -->
+                <div class="pdf-grid" style="margin-top: 15px;">
+                    <div>
+                        <p style="font-weight: bold; text-transform: uppercase; font-size: 10px; margin-bottom: 5px;">Observações / Condições Gerais:</p>
+                        <p id="pdf-obs" style="font-size: 10px; color: #333; white-space: pre-wrap; border: 1px solid #ccc; padding: 6px; min-height: 80px;">Nenhuma observação cadastrada.</p>
+                    </div>
+                    <div>
+                        <div class="pdf-totals">
+                            <div class="pdf-totals-row">
+                                <span>Total em Materiais:</span>
+                                <span id="pdf-total-materials">R$ 0,00</span>
+                            </div>
+                            <div class="pdf-totals-row">
+                                <span>Total em Mão de Obra:</span>
+                                <span id="pdf-total-labor">R$ 0,00</span>
+                            </div>
+                            <div class="pdf-totals-row" id="pdf-row-travel-total">
+                                <span>Total de Deslocamento:</span>
+                                <span id="pdf-total-travel">R$ 0,00</span>
+                            </div>
+                            <div class="pdf-totals-row">
+                                <span>Total Bruto:</span>
+                                <span id="pdf-total-gross">R$ 0,00</span>
+                            </div>
+                            <div class="pdf-totals-row">
+                                <span>Desconto Aplicado:</span>
+                                <span id="pdf-total-discount">0%</span>
+                            </div>
+                            <div class="pdf-totals-row">
+                                <span>Valor Final do Orçamento:</span>
+                                <span id="pdf-total-final" style="font-size: 13px; color: #000;">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #777;">
+                    <div style="width: 250px; border-top: 1px solid #000; margin: 0 auto 5px auto;"></div>
+                    <p>Responsável Técnico / Soluções Elétricas</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PÁGINA 5: HISTÓRICO DE SALVOS (MENU PRINCIPAL) ================= -->
+        <div class="page" id="page-5">
             <div class="section-title" style="background-color: var(--success-color);">Orçamentos Gravados no Navegador</div>
             
             <div class="table-responsive">
@@ -691,21 +910,24 @@
                         </tr>
                     </thead>
                     <tbody id="database-tbody">
-                        </tbody>
+                        <!-- Gerado localmente -->
+                    </tbody>
                 </table>
             </div>
             <p id="empty-db-message" style="text-align: center; color: #64748b; padding: 30px; font-style: italic;">Nenhum orçamento salvo neste aparelho.</p>
         </div>
 
+        <!-- Barra Inferior de Navegação -->
         <div class="navigation-actions no-print">
             <div>
-                <button class="btn btn-secondary" id="btn-back-menu" onclick="backToMainMenu()">Menu Inicial 🏠</button>
-                <button class="btn btn-secondary" id="btn-prev" onclick="changeStep(-1)">Voltar</button>
+                <button class="btn btn-secondary" id="btn-back-menu" onclick="backToMainMenu()">Voltar 🏠</button>
+                <button class="btn btn-secondary" id="btn-prev" onclick="changeStep(-1)">Voltar Passo</button>
             </div>
             <div>
-                <button class="btn btn-secondary" id="btn-clear" onclick="resetForm()">Limpar Tudo</button>
+                <button class="btn btn-danger" id="btn-clear" onclick="resetForm()">Limpar Tudo 🗑️</button>
                 <button class="btn" id="btn-save" style="background-color: var(--success-color); display: none;" onclick="saveBudgetToLocalStorage()">Salvar 💾</button>
                 <button class="btn" id="btn-next" onclick="changeStep(1)">Avançar</button>
+                <button class="btn" id="btn-whatsapp" style="background-color: #25d366; display: none;" onclick="sendPDFToWhatsapp()">Enviar p/ WhatsApp 💬</button>
                 <button class="btn" id="btn-print" style="background-color: var(--success-color); display: none;" onclick="window.print()">Imprimir / PDF 🖨️</button>
             </div>
         </div>
@@ -719,7 +941,7 @@
     document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR');
     let currentStep = 1;
 
-    // --- GERADOR DE ID SEQUENCIAL INTELIGENTE ---
+    // --- GERADOR DE ID SEQUENCIAL ---
     function generateNextDocId() {
         const currentYear2Digits = new Date().getFullYear().toString().slice(-2);
         const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
@@ -752,12 +974,12 @@
     function goToSavedBudgets() {
         document.getElementById('page-welcome').style.display = 'none';
         document.getElementById('main-interface').style.display = 'block';
-        navigateToStep(4);
+        navigateToStep(5);
     }
 
     function backToMainMenu() {
-        if (currentStep !== 4 && currentStep !== 1) {
-            if (!confirm("Voltar ao Menu Inicial? Dados não salvos serão perdidos.")) {
+        if (currentStep !== 5 && currentStep !== 1) {
+            if (!confirm("Voltar ao Menu Inicial? Os dados modificados serão perdidos.")) {
                 return;
             }
         }
@@ -771,13 +993,12 @@
         currentStep = 1;
     }
 
-    // --- NAVEGAÇÃO ENTRE PASSOS (WIZARD) ---
+    // --- NAVEGAÇÃO DOS PASSOS ---
     function navigateToStep(step) {
-        if (step === 4) {
+        if (step === 5) {
             loadSavedBudgets();
         }
 
-        // Esconde página atual
         const prevPage = document.getElementById(`page-${currentStep}`);
         const prevStep = document.getElementById(`step-${currentStep}`);
         if (prevPage) prevPage.classList.remove('active');
@@ -785,11 +1006,14 @@
 
         currentStep = step;
 
-        // Exibe nova página
         const nextPage = document.getElementById(`page-${currentStep}`);
         const nextStep = document.getElementById(`step-${currentStep}`);
         if (nextPage) nextPage.classList.add('active');
         if (nextStep) nextStep.classList.add('active');
+
+        if (step === 4) {
+            buildPDFContent(); 
+        }
 
         updateNavigationButtons();
     }
@@ -801,36 +1025,38 @@
     function updateNavigationButtons() {
         const btnPrev = document.getElementById('btn-prev');
         
-        // Desativa voltar no passo 1
         if (currentStep === 1) {
             btnPrev.setAttribute('disabled', 'true');
         } else {
             btnPrev.removeAttribute('disabled');
         }
 
-        if (currentStep === 4) {
+        if (currentStep === 5) {
             document.getElementById('btn-prev').style.display = 'none';
             document.getElementById('btn-next').style.display = 'none';
             document.getElementById('btn-save').style.display = 'none';
             document.getElementById('btn-print').style.display = 'none';
+            document.getElementById('btn-whatsapp').style.display = 'none';
             document.getElementById('btn-clear').style.display = 'none';
         } else {
             document.getElementById('btn-prev').style.display = 'inline-block';
             document.getElementById('btn-clear').style.display = 'inline-block';
             
-            if (currentStep === 3) {
+            if (currentStep === 4) {
                 document.getElementById('btn-next').style.display = 'none';
                 document.getElementById('btn-save').style.display = 'inline-block';
                 document.getElementById('btn-print').style.display = 'inline-block';
+                document.getElementById('btn-whatsapp').style.display = 'inline-block';
             } else {
                 document.getElementById('btn-next').style.display = 'inline-block';
                 document.getElementById('btn-save').style.display = 'none';
                 document.getElementById('btn-print').style.display = 'none';
+                document.getElementById('btn-whatsapp').style.display = 'none';
             }
         }
     }
 
-    // --- MATERIAIS ---
+    // --- MANIPULAÇÃO DE LINHAS (MATERIAIS E MÃO DE OBRA) ---
     function addMaterialRow(data = { name: '', brand: '', price: 0, qty: 0 }) {
         const tbody = document.querySelector('#materials-table tbody');
         const tr = document.createElement('tr');
@@ -856,7 +1082,6 @@
         updateAllTotals();
     }
 
-    // --- SERVIÇOS / MÃO DE OBRA ---
     function addLaborRow(data = { service: '', desc: '', price: 0, qty: 0 }) {
         const tbody = document.querySelector('#labor-table tbody');
         const tr = document.createElement('tr');
@@ -888,8 +1113,25 @@
         updateAllTotals();
     }
 
-    // --- DESLOCAMENTO ---
+    // --- CONTROLE DE DESLOCAMENTO ---
+    function toggleTravelActive() {
+        const active = document.getElementById('travel-active').checked;
+        const container = document.getElementById('travel-inputs-container');
+        if (active) {
+            container.style.opacity = '1';
+            container.style.pointerEvents = 'auto';
+        } else {
+            container.style.opacity = '0.5';
+            container.style.pointerEvents = 'none';
+        }
+        updateAllTotals();
+    }
+
     function calculateTravel() {
+        if (!document.getElementById('travel-active').checked) {
+            document.getElementById('travel-total').innerText = formatCurrency(0);
+            return 0;
+        }
         const km = parseFloat(document.getElementById('travel-km').value) || 0;
         const rate = parseFloat(document.getElementById('travel-rate').value) || 0;
         const total = km * rate;
@@ -908,7 +1150,17 @@
         }
     }
 
-    // --- CÁLCULO GERAL ---
+    // --- CÁLCULOS MATEMÁTICOS FINANCEIROS ---
+    let cachedTotals = {
+        materials: 0,
+        labor: 0,
+        travel: 0,
+        gross: 0,
+        discountPercent: 0,
+        discountValue: 0,
+        final: 0
+    };
+
     function updateAllTotals() {
         let totalMaterials = 0;
         document.querySelectorAll('#materials-table tbody tr').forEach(row => {
@@ -924,31 +1176,180 @@
             totalLabor += price * qty;
         });
 
-        const totalTravel = (parseFloat(document.getElementById('travel-km').value) || 0) * (parseFloat(document.getElementById('travel-rate').value) || 0);
-        const grossTotal = totalMaterials + totalLabor + totalTravel;
+        let totalTravel = 0;
+        if (document.getElementById('travel-active').checked) {
+            totalTravel = (parseFloat(document.getElementById('travel-km').value) || 0) * (parseFloat(document.getElementById('travel-rate').value) || 0);
+        }
 
+        const grossTotal = totalMaterials + totalLabor + totalTravel;
         const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
         const discountAmount = grossTotal * (discountPercent / 100);
         const finalTotal = Math.max(0, grossTotal - discountAmount);
 
-        document.getElementById('summary-material').innerText = formatCurrency(totalMaterials);
-        document.getElementById('summary-labor').innerText = formatCurrency(totalLabor);
-        document.getElementById('summary-travel').innerText = formatCurrency(totalTravel);
-        document.getElementById('summary-gross').innerText = formatCurrency(grossTotal);
-        document.getElementById('summary-final').innerText = formatCurrency(finalTotal);
+        cachedTotals = {
+            materials: totalMaterials,
+            labor: totalLabor,
+            travel: totalTravel,
+            gross: grossTotal,
+            discountPercent: discountPercent,
+            discountValue: discountAmount,
+            final: finalTotal
+        };
+    }
+
+    // --- CONSTRUÇÃO DO RESUMO DO PDF (DINÂMICO) ---
+    function buildPDFContent() {
+        updateAllTotals();
+
+        // 1. Informações de Cabeçalho e Metadados
+        document.getElementById('pdf-doc-id').innerText = document.getElementById('doc-id').innerText;
+        document.getElementById('pdf-current-date').innerText = document.getElementById('current-date').innerText;
+        document.getElementById('pdf-validity').innerText = document.getElementById('validity').value || 'Não informado';
+
+        // 2. Dados do Cliente
+        document.getElementById('pdf-client-name').innerText = document.getElementById('client-name').value || '--';
+        document.getElementById('pdf-client-company').innerText = document.getElementById('client-company').value || '--';
+        document.getElementById('pdf-client-document').innerText = document.getElementById('client-document').value || '--';
+        document.getElementById('pdf-client-whatsapp').innerText = document.getElementById('client-whatsapp').value || '--';
+        document.getElementById('pdf-client-address').innerText = 
+            (document.getElementById('client-address').value || '') + 
+            (document.getElementById('client-num').value ? ', Nº ' + document.getElementById('client-num').value : '');
+        document.getElementById('pdf-client-comp').innerText = document.getElementById('client-comp').value || '--';
+        document.getElementById('pdf-client-cep').innerText = document.getElementById('client-cep').value || '--';
+        document.getElementById('pdf-client-phone').innerText = document.getElementById('client-phone').value || '--';
+
+        // 3. Materiais Utilizados
+        const materialsTbody = document.querySelector('#pdf-materials-table tbody');
+        materialsTbody.innerHTML = '';
+        let hasMaterials = false;
+
+        document.querySelectorAll('#materials-table tbody tr').forEach(row => {
+            const name = row.querySelector('.mat-name').value;
+            const brand = row.querySelector('.mat-brand').value;
+            const price = parseFloat(row.querySelector('.mat-price').value) || 0;
+            const qty = parseFloat(row.querySelector('.mat-qty').value) || 0;
+
+            if (name.trim() !== "" && qty > 0) {
+                hasMaterials = true;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${name}</td>
+                    <td>${brand || '--'}</td>
+                    <td style="text-align: right;">${formatCurrency(price)}</td>
+                    <td style="text-align: center;">${qty}</td>
+                    <td style="text-align: right; font-weight: bold;">${formatCurrency(price * qty)}</td>
+                `;
+                materialsTbody.appendChild(tr);
+            }
+        });
+
+        document.getElementById('pdf-materials-section').style.display = hasMaterials ? 'block' : 'none';
+
+        // 4. Mão de Obra e Serviços
+        const laborTbody = document.querySelector('#pdf-labor-table tbody');
+        laborTbody.innerHTML = '';
+        let hasLabor = false;
+
+        document.querySelectorAll('#labor-table tbody tr').forEach(row => {
+            const service = row.querySelector('.labor-service').value;
+            const desc = row.querySelector('.labor-desc').value;
+            const price = parseFloat(row.querySelector('.labor-price').value) || 0;
+            const qty = parseFloat(row.querySelector('.labor-qty').value) || 0;
+
+            if (service.trim() !== "" && qty > 0) {
+                hasLabor = true;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${service}</td>
+                    <td>${desc || '--'}</td>
+                    <td style="text-align: right;">${formatCurrency(price)}</td>
+                    <td style="text-align: center;">${qty}</td>
+                    <td style="text-align: right; font-weight: bold;">${formatCurrency(price * qty)}</td>
+                `;
+                laborTbody.appendChild(tr);
+            }
+        });
+
+        document.getElementById('pdf-labor-section').style.display = hasLabor ? 'block' : 'none';
+
+        // 5. Deslocamento (Mostrar apenas se ativo)
+        const isTravelActive = document.getElementById('travel-active').checked;
+        if (isTravelActive) {
+            document.getElementById('pdf-travel-section').style.display = 'block';
+            document.getElementById('pdf-row-travel-total').style.display = 'flex';
+            document.getElementById('pdf-travel-origin').innerText = document.getElementById('travel-origin').value || '--';
+            document.getElementById('pdf-travel-dest').innerText = document.getElementById('travel-dest').value || '--';
+            document.getElementById('pdf-travel-km').innerText = document.getElementById('travel-km').value || '0';
+            document.getElementById('pdf-travel-total').innerText = formatCurrency(cachedTotals.travel);
+        } else {
+            document.getElementById('pdf-travel-section').style.display = 'none';
+            document.getElementById('pdf-row-travel-total').style.display = 'none';
+        }
+
+        // 6. Condições e Termos
+        document.getElementById('pdf-obs').innerText = document.getElementById('obs').value || 'Nenhuma observação cadastrada.';
+
+        // 7. Consolidação dos Valores Finais no PDF
+        document.getElementById('pdf-total-materials').innerText = formatCurrency(cachedTotals.materials);
+        document.getElementById('pdf-total-labor').innerText = formatCurrency(cachedTotals.labor);
+        document.getElementById('pdf-total-travel').innerText = formatCurrency(cachedTotals.travel);
+        document.getElementById('pdf-total-gross').innerText = formatCurrency(cachedTotals.gross);
+        document.getElementById('pdf-total-discount').innerText = `${cachedTotals.discountPercent}% (${formatCurrency(cachedTotals.discountValue)})`;
+        document.getElementById('pdf-total-final').innerText = formatCurrency(cachedTotals.final);
+    }
+
+    // --- EXPORTAR PDF E INTEGRAR COM WHATSAPP ---
+    function sendPDFToWhatsapp() {
+        const clientPhone = document.getElementById('client-whatsapp').value.replace(/\D/g, '');
+        const clientName = document.getElementById('client-name').value || 'Cliente';
+        const docId = document.getElementById('doc-id').innerText;
+        const totalVal = formatCurrency(cachedTotals.final);
+
+        if (!clientPhone) {
+            alert('Por favor, preencha o número de WhatsApp do cliente no Passo 1 antes de enviar!');
+            navigateToStep(1);
+            return;
+        }
+
+        // Configuração do conversor local (html2pdf)
+        const element = document.getElementById('pdf-content');
+        const filename = `Orcamento_Solucoes_Eletricas_${docId}.pdf`;
+        
+        const opt = {
+            margin:       10,
+            filename:     filename,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Salva e converte em PDF direto no celular do usuário
+        html2pdf().set(opt).from(element).save().then(() => {
+            // Cria o link personalizado do WhatsApp com o texto da proposta
+            const msg = encodeURIComponent(
+                `Olá, ${clientName}! ⚡\n` +
+                `Segue o documento digitalizado de seu *Orçamento Nº #${docId}*.\n\n` +
+                `💵 *Valor Total da Proposta:* ${totalVal}\n` +
+                `📅 *Validade:* ${document.getElementById('validity').value}\n\n` +
+                `O arquivo em formato PDF já foi gerado e baixado no seu dispositivo. Favor anexá-lo e enviar nesta conversa.`
+            );
+            
+            const whatsappUrl = `https://api.whatsapp.com/send?phone=55${clientPhone}&text=${msg}`;
+            window.open(whatsappUrl, '_blank');
+        });
     }
 
     function formatCurrency(value) {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // --- SISTEMA DE ARQUIVOS (LOCAL STORAGE) ---
+    // --- CONTROLE DE LOCAL STORAGE ---
     function saveBudgetToLocalStorage() {
         const docId = document.getElementById('doc-id').innerText;
         const date = document.getElementById('current-date').innerText;
         const name = document.getElementById('client-name').value;
         const whatsapp = document.getElementById('client-whatsapp').value;
-        const finalValue = document.getElementById('summary-final').innerText;
+        const finalValue = formatCurrency(cachedTotals.final);
 
         const budget = {
             clientData: {
@@ -967,6 +1368,7 @@
             materials: [],
             labor: [],
             travel: {
+                active: document.getElementById('travel-active').checked,
                 origin: document.getElementById('travel-origin').value,
                 dest: document.getElementById('travel-dest').value,
                 km: parseFloat(document.getElementById('travel-km').value) || 0,
@@ -1009,7 +1411,7 @@
         localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
 
         alert('Orçamento gravado com sucesso no dispositivo!');
-        navigateToStep(4);
+        navigateToStep(5);
     }
 
     function loadSavedBudgets() {
@@ -1026,7 +1428,6 @@
 
         emptyMsg.style.display = 'none';
 
-        // Mostra mais recentes no topo
         const displayList = [...savedBudgets].reverse();
 
         displayList.forEach(budget => {
@@ -1051,16 +1452,14 @@
         const budget = savedBudgets.find(b => b.clientData.docId === docId);
 
         if (!budget) {
-            alert('Não foi possível encontrar este registro.');
+            alert('Registro não encontrado.');
             return;
         }
 
-        // Recupera cabeçalho
         document.getElementById('doc-id').innerText = budget.clientData.docId;
         document.getElementById('current-date').innerText = budget.clientData.date;
         document.getElementById('validity').value = budget.clientData.validity;
 
-        // Recupera dados do cliente
         document.getElementById('client-name').value = budget.clientData.name;
         document.getElementById('client-company').value = budget.clientData.company;
         document.getElementById('client-document').value = budget.clientData.document;
@@ -1071,7 +1470,6 @@
         document.getElementById('client-whatsapp').value = budget.clientData.whatsapp;
         document.getElementById('client-phone').value = budget.clientData.phone;
 
-        // Recupera materiais
         const matTbody = document.querySelector('#materials-table tbody');
         matTbody.innerHTML = '';
         if (budget.materials && budget.materials.length > 0) {
@@ -1080,7 +1478,6 @@
             addMaterialRow();
         }
 
-        // Recupera mão de obra
         const laborTbody = document.querySelector('#labor-table tbody');
         laborTbody.innerHTML = '';
         if (budget.labor && budget.labor.length > 0) {
@@ -1089,22 +1486,25 @@
             addLaborRow();
         }
 
-        // Recupera deslocamento
-        document.getElementById('travel-origin').value = budget.travel.origin;
-        document.getElementById('travel-dest').value = budget.travel.dest;
-        document.getElementById('travel-km').value = budget.travel.km;
-        document.getElementById('travel-rate').value = budget.travel.rate;
+        // Recupera deslocamento se houver dados salvos
+        if(budget.travel) {
+            document.getElementById('travel-active').checked = budget.travel.active !== undefined ? budget.travel.active : true;
+            document.getElementById('travel-origin').value = budget.travel.origin;
+            document.getElementById('travel-dest').value = budget.travel.dest;
+            document.getElementById('travel-km').value = budget.travel.km;
+            document.getElementById('travel-rate').value = budget.travel.rate;
+        }
+        toggleTravelActive();
 
-        // Recupera obs e descontos
         document.getElementById('obs').value = budget.totals.obs;
         document.getElementById('discount-percent').value = budget.totals.discount;
 
         updateAllTotals();
-        navigateToStep(1); // Vai para o formulário
+        navigateToStep(1); 
     }
 
     function deleteBudget(docId) {
-        if (confirm(`Excluir o orçamento #${docId}?`)) {
+        if (confirm(`Deseja mesmo excluir o orçamento #${docId}?`)) {
             let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
             savedBudgets = savedBudgets.filter(b => b.clientData.docId !== docId);
             localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
