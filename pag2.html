@@ -1,13 +1,327 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teste</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Gerador de Orçamentos</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input, textarea {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .totals {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            font-size: 16px;
+        }
+
+        .totals div {
+            display: flex;
+            justify-content: space-between;
+            width: 250px;
+        }
+
+        .total-highlight {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+            border-top: 2px solid var(--border-color);
+            padding-top: 8px;
+        }
+
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+            input, textarea {
+                border: none;
+                padding: 0;
+                background: transparent;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>VOCÊ FOI DEMITIDO HAHA</h1>
-    <img src="https://advocaciapinheiro.com/wp-content/uploads/2017/06/fui-demitido-justa-causa-trabalhista.jpg" alt="BANDEIRA LGBTQIA+" width="300px" height="300px"
+
+<div class="container">
+    <!-- Cabeçalho do Orçamento -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Orçamento</h1>
+        <div style="text-align: right;">
+            <p><strong>Nº Doc:</strong> <span id="doc-id">1001</span></p>
+            <p><strong>Data:</strong> <span id="current-date">--/--/----</span></p>
+        </div>
+    </div>
+
+    <!-- Informações do Cliente -->
+    <div class="grid">
+        <div class="form-group">
+            <label for="client-name">Nome do Cliente</label>
+            <input type="text" id="client-name" placeholder="Ex: João Silva">
+        </div>
+        <div class="form-group">
+            <label for="client-email">E-mail</label>
+            <input type="email" id="client-email" placeholder="cliente@email.com">
+        </div>
+    </div>
+
+    <!-- Tabela de Itens -->
+    <h3>Itens do Orçamento</h3>
+    <table id="items-table">
+        <thead>
+            <tr>
+                <th style="width: 45%;">Descrição</th>
+                <th style="width: 15%;">Qtd</th>
+                <th style="width: 20%;">Preço Unit. (R$)</th>
+                <th style="width: 20%;">Total (R$)</th>
+                <th class="no-print" style="width: 10%;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" class="item-desc" placeholder="Ex: Desenvolvimento Web" style="width: 100%;"></td>
+                <td><input type="number" class="item-qty" value="1" min="1" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
+                <td><input type="number" class="item-price" value="0.00" min="0" step="0.01" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
+                <td class="row-total">R$ 0,00</td>
+                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">X</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button class="btn no-print" onclick="addRow()">+ Adicionar Item</button>
+
+    <!-- Resumo de Valores -->
+    <div class="totals">
+        <div>
+            <span>Subtotal:</span>
+            <span id="subtotal">R$ 0,00</span>
+        </div>
+        <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; width: 250px;">
+            <label for="tax-input" style="font-weight: normal;">Desconto (R$):</label>
+            <input type="number" id="discount-input" value="0.00" min="0" step="0.01" style="width: 100px; text-align: right;" oninput="updateTotals()">
+        </div>
+        <div class="total-highlight">
+            <span>Total Geral:</span>
+            <span id="grand-total">R$ 0,00</span>
+        </div>
+    </div>
+
+    <!-- Notas Adicionais -->
+    <div class="form-group" style="margin-top: 20px;">
+        <label for="notes">Termos e Condições / Observações</label>
+        <textarea id="notes" rows="3" placeholder="Ex: Validade deste orçamento: 10 dias. Pagamento em até 3x sem juros."></textarea>
+    </div>
+
+    <!-- Botões de Ação -->
+    <div class="actions no-print">
+        <button class="btn" style="background-color: #64748b;" onclick="clearForm()">Limpar Tela</button>
+        <button class="btn" onclick="window.print()">Imprimir / Salvar PDF</button>
+    </div>
+</div>
+
+<script>
+    // Define a data atual automaticamente
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR');
+    // Gera um número de orçamento aleatório
+    document.getElementById('doc-id').innerText = Math.floor(Math.random() * 9000) + 1000;
+
+    // Adiciona uma nova linha de itens
+    function addRow() {
+        const tableBody = document.querySelector('#items-table tbody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="text" class="item-desc" placeholder="Ex: Novo serviço" style="width: 100%;"></td>
+            <td><input type="number" class="item-qty" value="1" min="1" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
+            <td><input type="number" class="item-price" value="0.00" min="0" step="0.01" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
+            <td class="row-total">R$ 0,00</td>
+            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">X</button></td>
+        `;
+        tableBody.appendChild(newRow);
+    }
+
+    // Exclui uma linha de item
+    function deleteRow(button) {
+        const row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+        updateTotals();
+    }
+
+    // Calcula o total de uma linha específica
+    function calculateRowTotal(input) {
+        const row = input.parentNode.parentNode;
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const total = qty * price;
+        
+        row.querySelector('.row-total').innerText = formatCurrency(total);
+        updateTotals();
+    }
+
+    // Atualiza os totais gerais (Subtotal, Desconto e Total Geral)
+    function updateTotals() {
+        const rows = document.querySelectorAll('#items-table tbody tr');
+        let subtotal = 0;
+
+        rows.forEach(row => {
+            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            subtotal += qty * price;
+        });
+
+        const discount = parseFloat(document.getElementById('discount-input').value) || 0;
+        const grandTotal = Math.max(0, subtotal - discount);
+
+        document.getElementById('subtotal').innerText = formatCurrency(subtotal);
+        document.getElementById('grand-total').innerText = formatCurrency(grandTotal);
+    }
+
+    // Função auxiliar para formatar moeda (R$)
+    function formatCurrency(value) {
+        return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    // Limpa os campos para reiniciar
+    function clearForm() {
+        if(confirm('Deseja mesmo limpar todos os campos?')) {
+            document.getElementById('client-name').value = '';
+            document.getElementById('client-email').value = '';
+            document.getElementById('discount-input').value = '0.00';
+            document.getElementById('notes').value = '';
+            
+            const tbody = document.querySelector('#items-table tbody');
+            tbody.innerHTML = '';
+            addRow();
+            updateTotals();
+            document.getElementById('doc-id').innerText = Math.floor(Math.random() * 9000) + 1000;
+        }
+    }
+</script>
+
 </body>
 </html>
