@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Orçamentos</title>
+    <title>Gerador de Orçamentos - Com Banco de Dados</title>
     <style>
         :root {
-            --primary-color: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
+            --primary-color: #0f172a;
+            --secondary-color: #2563eb;
+            --bg-color: #f1f5f9;
             --card-bg: #ffffff;
             --text-color: #1e293b;
-            --border-color: #e2e8f0;
+            --border-color: #cbd5e1;
         }
 
         * {
@@ -31,121 +31,259 @@
 
         .container {
             width: 100%;
-            max-width: 800px;
+            max-width: 950px;
             background: var(--card-bg);
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-color);
         }
 
-        h1 {
-            font-size: 24px;
-            margin-bottom: 24px;
+        /* Topo */
+        .header-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 15px;
+        }
+
+        .header-title {
+            font-size: 26px;
+            font-weight: 800;
+            text-transform: uppercase;
             color: var(--primary-color);
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 10px;
         }
 
-        .grid {
+        /* Barra de Progresso / Abas */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--border-color);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            position: relative;
+            z-index: 2;
+            border: 3px solid var(--card-bg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            background-color: var(--secondary-color);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .step-label {
+            position: absolute;
+            top: 45px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            white-space: nowrap;
+            color: #64748b;
+        }
+
+        .step.active .step-label {
+            color: var(--secondary-color);
+        }
+
+        /* Controle de Páginas/Passos */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Títulos de Seção */
+        .section-title {
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 8px 12px;
+            text-transform: uppercase;
+            margin-top: 20px;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Grids e Formulários */
+        .grid-3 {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .form-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
         }
 
         label {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748b;
         }
 
-        input, textarea {
+        input, textarea, select {
             padding: 10px;
             border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 13px;
             outline: none;
-            transition: border-color 0.2s;
+            background-color: #f8fafc;
         }
 
-        input:focus, textarea:focus {
-            border-color: var(--primary-color);
+        input:focus {
+            border-color: var(--secondary-color);
+            background-color: #fff;
         }
 
+        /* Tabelas */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+            font-size: 13px;
         }
 
         th {
-            background-color: #f1f5f9;
-            font-weight: 600;
+            background-color: #e2e8f0;
+            color: var(--primary-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
         }
 
+        td {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .td-total {
+            font-weight: bold;
+            background-color: #f8fafc;
+            text-align: right;
+            padding-right: 12px;
+        }
+
+        /* Botões */
         .btn {
-            background-color: var(--primary-color);
+            background-color: var(--secondary-color);
             color: white;
-            padding: 10px 16px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
             transition: background-color 0.2s;
         }
 
         .btn:hover {
-            background-color: var(--primary-hover);
+            background-color: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background-color: #64748b;
+        }
+
+        .btn-secondary:hover {
+            background-color: #475569;
         }
 
         .btn-danger {
             background-color: #ef4444;
+            padding: 6px 10px;
         }
 
         .btn-danger:hover {
             background-color: #dc2626;
         }
 
-        .totals {
+        /* Resumo e Fechamento */
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
             margin-top: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 8px;
-            font-size: 16px;
         }
 
-        .totals div {
+        .totals-box {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: #f8fafc;
+            padding: 15px;
+        }
+
+        .total-row {
             display: flex;
             justify-content: space-between;
-            width: 250px;
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px dashed var(--border-color);
         }
 
-        .total-highlight {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--primary-color);
+        .total-row.highlight {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--secondary-color);
+            border-bottom: none;
             border-top: 2px solid var(--border-color);
-            padding-top: 8px;
+            padding-top: 12px;
+            margin-top: 6px;
         }
 
-        .actions {
+        /* Rodapé de Navegação */
+        .navigation-actions {
             margin-top: 30px;
             display: flex;
             justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
         }
 
+        /* Regras para Impressão */
         @media print {
             body {
                 background: white;
@@ -153,16 +291,30 @@
             }
             .container {
                 box-shadow: none;
+                border: none;
                 padding: 0;
                 max-width: 100%;
             }
             .no-print {
                 display: none !important;
             }
+            .page {
+                display: none;
+            }
+            #page-1, #page-2, #page-3 {
+                display: block !important; /* Mostra o orçamento contínuo no PDF */
+            }
+            .step-indicator {
+                display: none !important;
+            }
             input, textarea {
                 border: none;
-                padding: 0;
+                padding: 2px 0;
                 background: transparent;
+                resize: none;
+            }
+            .totals-box {
+                background-color: transparent;
             }
         }
     </style>
@@ -170,155 +322,560 @@
 <body>
 
 <div class="container">
-    <!-- Cabeçalho do Orçamento -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1>Orçamento</h1>
-        <div style="text-align: right;">
-            <p><strong>Nº Doc:</strong> <span id="doc-id">1001</span></p>
-            <p><strong>Data:</strong> <span id="current-date">--/--/----</span></p>
-        </div>
-    </div>
-
-    <!-- Informações do Cliente -->
-    <div class="grid">
-        <div class="form-group">
-            <label for="client-name">Nome do Cliente</label>
-            <input type="text" id="client-name" placeholder="Ex: João Silva">
-        </div>
-        <div class="form-group">
-            <label for="client-email">E-mail</label>
-            <input type="email" id="client-email" placeholder="cliente@email.com">
-        </div>
-    </div>
-
-    <!-- Tabela de Itens -->
-    <h3>Itens do Orçamento</h3>
-    <table id="items-table">
-        <thead>
-            <tr>
-                <th style="width: 45%;">Descrição</th>
-                <th style="width: 15%;">Qtd</th>
-                <th style="width: 20%;">Preço Unit. (R$)</th>
-                <th style="width: 20%;">Total (R$)</th>
-                <th class="no-print" style="width: 10%;">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><input type="text" class="item-desc" placeholder="Ex: Desenvolvimento Web" style="width: 100%;"></td>
-                <td><input type="number" class="item-qty" value="1" min="1" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
-                <td><input type="number" class="item-price" value="0.00" min="0" step="0.01" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
-                <td class="row-total">R$ 0,00</td>
-                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">X</button></td>
-            </tr>
-        </tbody>
+    
+    <table class="header-table">
+        <tr>
+            <td style="border: none; padding: 0;">
+                <div class="header-title">Orçamento Técnico</div>
+            </td>
+            <td style="border: none; padding: 0; text-align: right; font-size: 13px;">
+                <p><strong>Nº Doc:</strong> <span id="doc-id">--</span></p>
+                <p><strong>Realizado:</strong> <span id="current-date">--/--/----</span></p>
+                <p><strong>Validade:</strong> <input type="text" id="validity" value="10 dias" style="width: 70px; text-align: right; background: transparent; font-weight: bold;"></p>
+            </td>
+        </tr>
     </table>
 
-    <button class="btn no-print" onclick="addRow()">+ Adicionar Item</button>
+    <div class="step-indicator no-print">
+        <div class="step active" id="step-1" onclick="navigateToStep(1)">1
+            <span class="step-label">Cliente</span>
+        </div>
+        <div class="step" id="step-2" onclick="navigateToStep(2)">2
+            <span class="step-label">Itens & Serviços</span>
+        </div>
+        <div class="step" id="step-3" onclick="navigateToStep(3)">3
+            <span class="step-label">Resumo Final</span>
+        </div>
+        <div class="step" id="step-4" onclick="navigateToStep(4)" style="background-color: #10b981; color: white;">📂
+            <span class="step-label" style="color: #10b981;">Banco de Dados</span>
+        </div>
+    </div>
 
-    <!-- Resumo de Valores -->
-    <div class="totals">
+    <div class="page active" id="page-1">
+        <div class="section-title">Dados do Cliente</div>
+        <div class="grid-3">
+            <div class="form-group">
+                <label>Nome / Responsável</label>
+                <input type="text" id="client-name" placeholder="Ex: João Silva">
+            </div>
+            <div class="form-group">
+                <label>Empresa</label>
+                <input type="text" id="client-company" placeholder="Nome da Empresa">
+            </div>
+            <div class="form-group">
+                <label>CPF / CNPJ</label>
+                <input type="text" id="client-document" placeholder="000.000.000-00">
+            </div>
+        </div>
+        <div class="grid-3">
+            <div class="form-group">
+                <label>Logradouro</label>
+                <input type="text" id="client-address" placeholder="Rua, Avenida...">
+            </div>
+            <div class="form-group">
+                <label>Nº</label>
+                <input type="text" id="client-num" placeholder="123">
+            </div>
+            <div class="form-group">
+                <label>CEP</label>
+                <input type="text" id="client-cep" placeholder="00000-000">
+            </div>
+        </div>
+        <div class="grid-3">
+            <div class="form-group">
+                <label>Complemento</label>
+                <input type="text" id="client-comp" placeholder="Apto, Sala, Bloco...">
+            </div>
+            <div class="form-group">
+                <label>WhatsApp</label>
+                <input type="text" id="client-whatsapp" placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+                <label>Telefone</label>
+                <input type="text" id="client-phone" placeholder="(00) 0000-0000">
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page-2">
+        <div class="section-title">Materiais</div>
+        <table id="materials-table">
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Material</th>
+                    <th style="width: 20%;">Marca</th>
+                    <th style="width: 15%;">Valor Und</th>
+                    <th style="width: 10%;">Qtd</th>
+                    <th style="width: 15%;">Valor Total</th>
+                    <th class="no-print" style="width: 5%;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="mat-name" placeholder="Ex: Tomada de Embutir" style="width:100%;"></td>
+                    <td><input type="text" class="mat-brand" placeholder="Ex: Tramontina" style="width:100%;"></td>
+                    <td><input type="number" class="mat-price" value="0.00" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateMaterialRow(this)"></td>
+                    <td><input type="number" class="mat-qty" value="0" min="0" style="width:100%; text-align:center;" oninput="calculateMaterialRow(this)"></td>
+                    <td class="mat-total td-total">R$ 0,00</td>
+                    <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'materials')">X</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn no-print" onclick="addMaterialRow()" style="margin-bottom: 25px;">+ Adicionar Material</button>
+
+        <div class="section-title">Mão de Obra</div>
+        <table id="labor-table">
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Instalação / Serviço</th>
+                    <th style="width: 30%;">Item / Descrição</th>
+                    <th style="width: 15%;">Valor Und</th>
+                    <th style="width: 10%;">Qtd</th>
+                    <th style="width: 15%;">Valor Total</th>
+                    <th class="no-print" style="width: 5%;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="labor-service" placeholder="Ex: Instalação Elétrica" style="width:100%;"></td>
+                    <td><input type="text" class="labor-desc" placeholder="Ex: Tomada" style="width:100%;"></td>
+                    <td><input type="number" class="labor-price" value="0.00" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateLaborRow(this)"></td>
+                    <td><input type="number" class="labor-qty" value="0" min="0" style="width:100%; text-align:center;" oninput="calculateLaborRow(this)"></td>
+                    <td class="labor-total td-total">R$ 0,00</td>
+                    <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'labor')">X</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn no-print" onclick="addLaborRow()">+ Adicionar Mão de Obra</button>
+    </div>
+
+    <div class="page" id="page-3">
+        <div class="section-title">Deslocamento</div>
+        <div class="grid-4">
+            <div class="form-group">
+                <label>Origem</label>
+                <input type="text" id="travel-origin" value="CARUARU">
+            </div>
+            <div class="form-group">
+                <label>Endereço Serviço / N°</label>
+                <input type="text" id="travel-dest" placeholder="Ex: Av. Agamenon Magalhães, 100">
+            </div>
+            <div class="form-group">
+                <label>KM (Ida e Volta)</label>
+                <input type="number" id="travel-km" value="0" min="0" step="0.1" oninput="calculateTravel()">
+            </div>
+            <div class="form-group">
+                <label>Valor por KM (R$)</label>
+                <input type="number" id="travel-rate" value="1.25" min="0" step="0.01" oninput="calculateTravel()">
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <button class="btn no-print" style="background-color: #0284c7;" onclick="openMap()">Abrir no Mapa 🗺️</button>
+            </div>
+            <div style="font-size: 13px; font-weight: bold;">
+                Total Deslocamento: <span id="travel-total" style="color: var(--secondary-color);">R$ 0,00</span>
+            </div>
+        </div>
+
+        <div class="footer-grid">
+            <div class="form-group">
+                <label>Observações Adicionais</label>
+                <textarea id="obs" rows="8" placeholder="Ex: Condições de pagamento, prazos de entrega, etc..."></textarea>
+            </div>
+
+            <div class="totals-box">
+                <div class="total-row">
+                    <span>Total Material:</span>
+                    <span id="summary-material">R$ 0,00</span>
+                </div>
+                <div class="total-row">
+                    <span>Total Mão de Obra:</span>
+                    <span id="summary-labor">R$ 0,00</span>
+                </div>
+                <div class="total-row">
+                    <span>Total Deslocamento:</span>
+                    <span id="summary-travel">R$ 0,00</span>
+                </div>
+                <div class="total-row">
+                    <span>Total Geral bruto:</span>
+                    <span id="summary-gross">R$ 0,00</span>
+                </div>
+                <div class="total-row" style="align-items: center; padding: 3px 0;">
+                    <span>Desconto (%):</span>
+                    <input type="number" id="discount-percent" value="0" min="0" max="100" style="width: 70px; text-align: right; padding: 4px;" oninput="updateAllTotals()">
+                </div>
+                <div class="total-row highlight">
+                    <span>Valor Final:</span>
+                    <span id="summary-final">R$ 0,00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page-4">
+        <div class="section-title" style="background-color: #10b981;">Histórico de Orçamentos Salvos</div>
+        
+        <table id="database-table">
+            <thead>
+                <tr>
+                    <th>Nº Doc</th>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>WhatsApp</th>
+                    <th>Valor Final</th>
+                    <th style="width: 25%; text-align: center;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="database-tbody">
+                </tbody>
+        </table>
+        <p id="empty-db-message" style="text-align: center; color: #64748b; padding: 20px; font-style: italic;">Nenhum orçamento salvo neste dispositivo.</p>
+    </div>
+
+    <div class="navigation-actions no-print">
+        <button class="btn btn-secondary" id="btn-prev" onclick="changeStep(-1)" disabled>Voltar</button>
         <div>
-            <span>Subtotal:</span>
-            <span id="subtotal">R$ 0,00</span>
-        </div>
-        <div class="form-group" style="flex-direction: row; align-items: center; justify-content: space-between; width: 250px;">
-            <label for="tax-input" style="font-weight: normal;">Desconto (R$):</label>
-            <input type="number" id="discount-input" value="0.00" min="0" step="0.01" style="width: 100px; text-align: right;" oninput="updateTotals()">
-        </div>
-        <div class="total-highlight">
-            <span>Total Geral:</span>
-            <span id="grand-total">R$ 0,00</span>
+            <button class="btn btn-secondary" onclick="resetForm()" style="margin-right: 10px;">Limpar Tela</button>
+            <button class="btn" id="btn-save" style="background-color: #10b981; margin-right: 10px; display: none;" onclick="saveBudgetToDatabase()">Salvar Orçamento 💾</button>
+            <button class="btn" id="btn-next" onclick="changeStep(1)">Avançar</button>
+            <button class="btn" id="btn-print" style="background-color: #10b981; display: none;" onclick="window.print()">Gerar PDF / Imprimir 🖨️</button>
         </div>
     </div>
 
-    <!-- Notas Adicionais -->
-    <div class="form-group" style="margin-top: 20px;">
-        <label for="notes">Termos e Condições / Observações</label>
-        <textarea id="notes" rows="3" placeholder="Ex: Validade deste orçamento: 10 dias. Pagamento em até 3x sem juros."></textarea>
-    </div>
-
-    <!-- Botões de Ação -->
-    <div class="actions no-print">
-        <button class="btn" style="background-color: #64748b;" onclick="clearForm()">Limpar Tela</button>
-        <button class="btn" onclick="window.print()">Imprimir / Salvar PDF</button>
-    </div>
 </div>
 
 <script>
-    // Define a data atual automaticamente
+    // Inicialização da página
     document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR');
-    // Gera um número de orçamento aleatório
-    document.getElementById('doc-id').innerText = Math.floor(Math.random() * 9000) + 1000;
+    document.getElementById('doc-id').innerText = Math.floor(Math.random() * 90000) + 10000;
 
-    // Adiciona uma nova linha de itens
-    function addRow() {
-        const tableBody = document.querySelector('#items-table tbody');
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td><input type="text" class="item-desc" placeholder="Ex: Novo serviço" style="width: 100%;"></td>
-            <td><input type="number" class="item-qty" value="1" min="1" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
-            <td><input type="number" class="item-price" value="0.00" min="0" step="0.01" style="width: 100%;" oninput="calculateRowTotal(this)"></td>
-            <td class="row-total">R$ 0,00</td>
-            <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(this)">X</button></td>
+    let currentStep = 1;
+
+    // --- CONTROLE DE PAGINAÇÃO / WIZARD ---
+    function navigateToStep(step) {
+        // Se formos para a tela de Banco de Dados, atualiza a lista de registros salvos primeiro
+        if (step === 4) {
+            loadSavedBudgets();
+        }
+
+        document.getElementById(`page-${currentStep}`).classList.remove('active');
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+
+        currentStep = step;
+
+        document.getElementById(`page-${currentStep}`).classList.add('active');
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+
+        updateNavigationButtons();
+    }
+
+    function changeStep(direction) {
+        navigateToStep(currentStep + direction);
+    }
+
+    function updateNavigationButtons() {
+        document.getElementById('btn-prev').disabled = currentStep === 1;
+
+        // Controle do botão de "Salvar Orçamento" e "Imprimir"
+        if (currentStep === 3) {
+            document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('btn-save').style.display = 'inline-block';
+            document.getElementById('btn-print').style.display = 'inline-block';
+        } else if (currentStep === 4) {
+            document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('btn-save').style.display = 'none';
+            document.getElementById('btn-print').style.display = 'none';
+        } else {
+            document.getElementById('btn-next').style.display = 'inline-block';
+            document.getElementById('btn-save').style.display = 'none';
+            document.getElementById('btn-print').style.display = 'none';
+        }
+    }
+
+    // --- CÁLCULOS DE MATERIAL ---
+    function addMaterialRow(data = { name: '', brand: '', price: 0, qty: 0 }) {
+        const tbody = document.querySelector('#materials-table tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" class="mat-name" value="${data.name}" placeholder="Nome do material" style="width:100%;"></td>
+            <td><input type="text" class="mat-brand" value="${data.brand}" placeholder="Marca" style="width:100%;"></td>
+            <td><input type="number" class="mat-price" value="${data.price.toFixed(2)}" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateMaterialRow(this)"></td>
+            <td><input type="number" class="mat-qty" value="${data.qty}" min="0" style="width:100%; text-align:center;" oninput="calculateMaterialRow(this)"></td>
+            <td class="mat-total td-total">R$ 0,00</td>
+            <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'materials')">X</button></td>
         `;
-        tableBody.appendChild(newRow);
+        tbody.appendChild(tr);
+        calculateMaterialRow(tr.querySelector('.mat-price'));
     }
 
-    // Exclui uma linha de item
-    function deleteRow(button) {
-        const row = button.parentNode.parentNode;
-        row.parentNode.removeChild(row);
-        updateTotals();
+    function calculateMaterialRow(input) {
+        if (!input) return;
+        const row = input.closest('tr');
+        const price = parseFloat(row.querySelector('.mat-price').value) || 0;
+        const qty = parseFloat(row.querySelector('.mat-qty').value) || 0;
+        const total = price * qty;
+        row.querySelector('.mat-total').innerText = formatCurrency(total);
+        updateAllTotals();
     }
 
-    // Calcula o total de uma linha específica
-    function calculateRowTotal(input) {
-        const row = input.parentNode.parentNode;
-        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-        const price = parseFloat(row.querySelector('.item-price').value) || 0;
-        const total = qty * price;
-        
-        row.querySelector('.row-total').innerText = formatCurrency(total);
-        updateTotals();
+    // --- CÁLCULOS DE MÃO DE OBRA ---
+    function addLaborRow(data = { service: '', desc: '', price: 0, qty: 0 }) {
+        const tbody = document.querySelector('#labor-table tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" class="labor-service" value="${data.service}" placeholder="Instalação / Serviço" style="width:100%;"></td>
+            <td><input type="text" class="labor-desc" value="${data.desc}" placeholder="Item / Descrição" style="width:100%;"></td>
+            <td><input type="number" class="labor-price" value="${data.price.toFixed(2)}" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateLaborRow(this)"></td>
+            <td><input type="number" class="labor-qty" value="${data.qty}" min="0" style="width:100%; text-align:center;" oninput="calculateLaborRow(this)"></td>
+            <td class="labor-total td-total">R$ 0,00</td>
+            <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'labor')">X</button></td>
+        `;
+        tbody.appendChild(tr);
+        calculateLaborRow(tr.querySelector('.labor-price'));
     }
 
-    // Atualiza os totais gerais (Subtotal, Desconto e Total Geral)
-    function updateTotals() {
-        const rows = document.querySelectorAll('#items-table tbody tr');
-        let subtotal = 0;
+    function calculateLaborRow(input) {
+        if (!input) return;
+        const row = input.closest('tr');
+        const price = parseFloat(row.querySelector('.labor-price').value) || 0;
+        const qty = parseFloat(row.querySelector('.labor-qty').value) || 0;
+        const total = price * qty;
+        row.querySelector('.labor-total').innerText = formatCurrency(total);
+        updateAllTotals();
+    }
 
-        rows.forEach(row => {
-            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-            const price = parseFloat(row.querySelector('.item-price').value) || 0;
-            subtotal += qty * price;
+    function deleteRow(button, type) {
+        const row = button.closest('tr');
+        row.remove();
+        updateAllTotals();
+    }
+
+    // --- CÁLCULOS DE DESLOCAMENTO ---
+    function calculateTravel() {
+        const km = parseFloat(document.getElementById('travel-km').value) || 0;
+        const rate = parseFloat(document.getElementById('travel-rate').value) || 0;
+        const total = km * rate;
+        document.getElementById('travel-total').innerText = formatCurrency(total);
+        updateAllTotals();
+        return total;
+    }
+
+    function openMap() {
+        const origin = encodeURIComponent(document.getElementById('travel-origin').value);
+        const dest = encodeURIComponent(document.getElementById('travel-dest').value);
+        if (dest) {
+            window.open(`https://www.google.com/maps/dir/${origin}/${dest}`, '_blank');
+        } else {
+            alert('Por favor, preencha o endereço do serviço primeiro.');
+        }
+    }
+
+    // --- ATUALIZAÇÃO DOS TOTAIS GERAIS ---
+    function updateAllTotals() {
+        let totalMaterials = 0;
+        document.querySelectorAll('#materials-table tbody tr').forEach(row => {
+            const price = parseFloat(row.querySelector('.mat-price').value) || 0;
+            const qty = parseFloat(row.querySelector('.mat-qty').value) || 0;
+            totalMaterials += price * qty;
         });
 
-        const discount = parseFloat(document.getElementById('discount-input').value) || 0;
-        const grandTotal = Math.max(0, subtotal - discount);
+        let totalLabor = 0;
+        document.querySelectorAll('#labor-table tbody tr').forEach(row => {
+            const price = parseFloat(row.querySelector('.labor-price').value) || 0;
+            const qty = parseFloat(row.querySelector('.labor-qty').value) || 0;
+            totalLabor += price * qty;
+        });
 
-        document.getElementById('subtotal').innerText = formatCurrency(subtotal);
-        document.getElementById('grand-total').innerText = formatCurrency(grandTotal);
+        const totalTravel = parseFloat(document.getElementById('travel-km').value) * parseFloat(document.getElementById('travel-rate').value) || 0;
+        const grossTotal = totalMaterials + totalLabor + totalTravel;
+
+        const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
+        const discountAmount = grossTotal * (discountPercent / 100);
+        const finalTotal = Math.max(0, grossTotal - discountAmount);
+
+        document.getElementById('summary-material').innerText = formatCurrency(totalMaterials);
+        document.getElementById('summary-labor').innerText = formatCurrency(totalLabor);
+        document.getElementById('summary-travel').innerText = formatCurrency(totalTravel);
+        document.getElementById('summary-gross').innerText = formatCurrency(grossTotal);
+        document.getElementById('summary-final').innerText = formatCurrency(finalTotal);
     }
 
-    // Função auxiliar para formatar moeda (R$)
     function formatCurrency(value) {
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // Limpa os campos para reiniciar
-    function clearForm() {
-        if(confirm('Deseja mesmo limpar todos os campos?')) {
-            document.getElementById('client-name').value = '';
-            document.getElementById('client-email').value = '';
-            document.getElementById('discount-input').value = '0.00';
-            document.getElementById('notes').value = '';
-            
-            const tbody = document.querySelector('#items-table tbody');
-            tbody.innerHTML = '';
-            addRow();
-            updateTotals();
-            document.getElementById('doc-id').innerText = Math.floor(Math.random() * 9000) + 1000;
+    // --- BANCO DE DADOS LOCAL (LOCALSTORAGE) ---
+    function saveBudgetToDatabase() {
+        const docId = document.getElementById('doc-id').innerText;
+        const date = document.getElementById('current-date').innerText;
+        
+        // Coleta de dados básicos
+        const clientData = {
+            docId, date,
+            validity: document.getElementById('validity').value,
+            name: document.getElementById('client-name').value,
+            company: document.getElementById('client-company').value,
+            document: document.getElementById('client-document').value,
+            address: document.getElementById('client-address').value,
+            num: document.getElementById('client-num').value,
+            cep: document.getElementById('client-cep').value,
+            comp: document.getElementById('client-comp').value,
+            whatsapp: document.getElementById('client-whatsapp').value,
+            phone: document.getElementById('client-phone').value,
+        };
+
+        // Coleta dos materiais
+        const materials = [];
+        document.querySelectorAll('#materials-table tbody tr').forEach(row => {
+            materials.push({
+                name: row.querySelector('.mat-name').value,
+                brand: row.querySelector('.mat-brand').value,
+                price: parseFloat(row.querySelector('.mat-price').value) || 0,
+                qty: parseFloat(row.querySelector('.mat-qty').value) || 0
+            });
+        });
+
+        // Coleta de Mão de Obra
+        const labor = [];
+        document.querySelectorAll('#labor-table tbody tr').forEach(row => {
+            labor.push({
+                service: row.querySelector('.labor-service').value,
+                desc: row.querySelector('.labor-desc').value,
+                price: parseFloat(row.querySelector('.labor-price').value) || 0,
+                qty: parseFloat(row.querySelector('.labor-qty').value) || 0
+            });
+        });
+
+        // Coleta de Deslocamento e Totais
+        const travel = {
+            origin: document.getElementById('travel-origin').value,
+            dest: document.getElementById('travel-dest').value,
+            km: parseFloat(document.getElementById('travel-km').value) || 0,
+            rate: parseFloat(document.getElementById('travel-rate').value) || 1.25
+        };
+
+        const totals = {
+            discount: parseFloat(document.getElementById('discount-percent').value) || 0,
+            obs: document.getElementById('obs').value,
+            finalValue: document.getElementById('summary-final').innerText
+        };
+
+        const budget = { clientData, materials, labor, travel, totals };
+
+        // Puxa banco existente ou inicia vazio
+        let savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
+        
+        // Substitui se for o mesmo ID (edição), senão adiciona um novo
+        const existingIndex = savedBudgets.findIndex(item => item.clientData.docId === docId);
+        if (existingIndex > -1) {
+            savedBudgets[existingIndex] = budget;
+        } else {
+            savedBudgets.push(budget);
+        }
+
+        localStorage.setItem('my_budgets', JSON.stringify(savedBudgets));
+        alert('Orçamento salvo com sucesso no banco de dados local!');
+        navigateToStep(4); // Vai para a tela de banco de dados
+    }
+
+    function loadSavedBudgets() {
+        const savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
+        const tbody = document.getElementById('database-tbody');
+        const emptyMsg = document.getElementById('empty-db-message');
+        
+        tbody.innerHTML = '';
+
+        if (savedBudgets.length === 0) {
+            emptyMsg.style.display = 'block';
+            return;
+        }
+
+        emptyMsg.style.display = 'none';
+
+        savedBudgets.forEach(budget => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>#${budget.clientData.docId}</strong></td>
+                <td>${budget.clientData.date}</td>
+                <td>${budget.clientData.name || '<i>Não preenchido</i>'}</td>
+                <td>${budget.clientData.whatsapp || '--'}</td>
+                <td style="color: var(--secondary-color); font-weight: bold;">${budget.totals.finalValue}</td>
+                <td style="text-align: center;">
+                    <button class="btn" style="background-color: #0284c7; padding: 4px 8px; font-size: 10px;" onclick='viewBudget("${budget.clientData.docId}")'>Abrir 📂</button>
+                    <button class="btn btn-danger" style="padding: 4px 8px; font-size: 10px;" onclick='deleteBudget("${budget.clientData.docId}")'>Deletar 🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function viewBudget(docId) {
+        const savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
+        const budget = savedBudgets.find(item => item.clientData.docId === docId);
+
+        if (!budget) return;
+
+        // Restaura cabeçalho
+        document.getElementById('doc-id').innerText = budget.clientData.docId;
+        document.getElementById('current-date').innerText = budget.clientData.date;
+        document.getElementById('validity').value = budget.clientData.validity;
+
+        // Restaura cliente
+        document.getElementById('client-name').value = budget.clientData.name;
+        document.getElementById('client-company').value = budget.clientData.company;
+        document.getElementById('client-document').value = budget.clientData.document;
+        document.getElementById('client-address').value = budget.clientData.address;
+        document.getElementById('client-num').value = budget.clientData.num;
+        document.getElementById('client-cep').value = budget.clientData.cep;
+        document.getElementById('client-comp').value = budget.clientData.comp;
+        document.getElementById('client-whatsapp').value = budget.clientData.whatsapp;
+        document.getElementById('client-phone').value = budget.clientData.phone;
+
+        // Restaura materiais
+        const matTbody = document.querySelector('#materials-table tbody');
+        matTbody.innerHTML = '';
+        if (budget.materials.length > 0) {
+            budget.materials.forEach(mat => addMaterialRow(mat));
+        } else {
+            addMaterialRow();
+        }
+
+        // Restaura mão de obra
+        const laborTbody = document.querySelector('#labor-table tbody');
+        laborTbody.innerHTML = '';
+        if (budget.labor.length > 0) {
+            budget.labor.forEach(lab => addLaborRow(lab));
+        } else {
+            addLaborRow();
+        }
+
+        // Restaura deslocamento
+        document.getElementById('travel-origin').value = budget.travel.origin;
+        document.getElementById('travel-dest').value = budget.travel.dest;
+        document.getElementById('travel-km').value = budget.travel.km;
+        document.getElementById('travel-rate').value = budget.travel.rate;
+
+        // Restaura Observações e Desconto
+        document.getElementById('obs').value = budget.totals.obs;
+        document.getElementById('discount-percent').value = budget.totals.discount;
+
+        updateAllTotals();
+        navigateToStep(1); // Volta pro passo 1 para o usuário poder editar ou re-imprimir
+    }
+
+    function deleteBudget(docId) {
+        if (confirm(`Tem certeza que deseja deletar o orçamento #${docId}?`)) {
+            let savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
+            savedBudgets = savedBudgets.filter(item => item.clientData.docId !== docId);
+            localStorage.setItem('my_budgets', JSON.stringify(savedBudgets));
+            loadSavedBudgets();
+        }
+    }
+
+    function resetForm() {
+        if(confirm('Tem certeza que deseja apagar todos os dados digitados na tela?')) {
+            window.location.reload();
         }
     }
 </script>
