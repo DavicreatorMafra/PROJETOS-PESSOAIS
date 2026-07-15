@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Orçamentos - Com Banco de Dados</title>
+    <title>Gerador de Orçamentos - Salvo no Navegador</title>
     <style>
         :root {
             --primary-color: #0f172a;
@@ -27,6 +27,8 @@
             padding: 20px;
             display: flex;
             justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
         }
 
         .container {
@@ -39,7 +41,73 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Topo */
+        /* Menu de Boas-Vindas (Tela Inicial) */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .welcome-subtitle {
+            font-size: 15px;
+            color: #64748b;
+            margin-bottom: 35px;
+        }
+
+        .menu-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .menu-card {
+            background: #f8fafc;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-card:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+        }
+
+        .menu-icon {
+            font-size: 40px;
+        }
+
+        .menu-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+        }
+
+        .menu-card p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Topo do Formulário */
         .header-table {
             width: 100%;
             margin-bottom: 20px;
@@ -302,7 +370,10 @@
                 display: none;
             }
             #page-1, #page-2, #page-3 {
-                display: block !important; /* Mostra o orçamento contínuo no PDF */
+                display: block !important;
+            }
+            #page-welcome, #page-4 {
+                display: none !important;
             }
             .step-indicator {
                 display: none !important;
@@ -323,249 +394,339 @@
 
 <div class="container">
     
-    <table class="header-table">
-        <tr>
-            <td style="border: none; padding: 0;">
-                <div class="header-title">Orçamento Técnico</div>
-            </td>
-            <td style="border: none; padding: 0; text-align: right; font-size: 13px;">
-                <p><strong>Nº Doc:</strong> <span id="doc-id">--</span></p>
-                <p><strong>Realizado:</strong> <span id="current-date">--/--/----</span></p>
-                <p><strong>Validade:</strong> <input type="text" id="validity" value="10 dias" style="width: 70px; text-align: right; background: transparent; font-weight: bold;"></p>
-            </td>
-        </tr>
-    </table>
-
-    <div class="step-indicator no-print">
-        <div class="step active" id="step-1" onclick="navigateToStep(1)">1
-            <span class="step-label">Cliente</span>
-        </div>
-        <div class="step" id="step-2" onclick="navigateToStep(2)">2
-            <span class="step-label">Itens & Serviços</span>
-        </div>
-        <div class="step" id="step-3" onclick="navigateToStep(3)">3
-            <span class="step-label">Resumo Final</span>
-        </div>
-        <div class="step" id="step-4" onclick="navigateToStep(4)" style="background-color: #10b981; color: white;">📂
-            <span class="step-label" style="color: #10b981;">Banco de Dados</span>
-        </div>
-    </div>
-
-    <div class="page active" id="page-1">
-        <div class="section-title">Dados do Cliente</div>
-        <div class="grid-3">
-            <div class="form-group">
-                <label>Nome / Responsável</label>
-                <input type="text" id="client-name" placeholder="Ex: João Silva">
-            </div>
-            <div class="form-group">
-                <label>Empresa</label>
-                <input type="text" id="client-company" placeholder="Nome da Empresa">
-            </div>
-            <div class="form-group">
-                <label>CPF / CNPJ</label>
-                <input type="text" id="client-document" placeholder="000.000.000-00">
-            </div>
-        </div>
-        <div class="grid-3">
-            <div class="form-group">
-                <label>Logradouro</label>
-                <input type="text" id="client-address" placeholder="Rua, Avenida...">
-            </div>
-            <div class="form-group">
-                <label>Nº</label>
-                <input type="text" id="client-num" placeholder="123">
-            </div>
-            <div class="form-group">
-                <label>CEP</label>
-                <input type="text" id="client-cep" placeholder="00000-000">
-            </div>
-        </div>
-        <div class="grid-3">
-            <div class="form-group">
-                <label>Complemento</label>
-                <input type="text" id="client-comp" placeholder="Apto, Sala, Bloco...">
-            </div>
-            <div class="form-group">
-                <label>WhatsApp</label>
-                <input type="text" id="client-whatsapp" placeholder="(00) 00000-0000">
-            </div>
-            <div class="form-group">
-                <label>Telefone</label>
-                <input type="text" id="client-phone" placeholder="(00) 0000-0000">
-            </div>
-        </div>
-    </div>
-
-    <div class="page" id="page-2">
-        <div class="section-title">Materiais</div>
-        <table id="materials-table">
-            <thead>
-                <tr>
-                    <th style="width: 40%;">Material</th>
-                    <th style="width: 20%;">Marca</th>
-                    <th style="width: 15%;">Valor Und</th>
-                    <th style="width: 10%;">Qtd</th>
-                    <th style="width: 15%;">Valor Total</th>
-                    <th class="no-print" style="width: 5%;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><input type="text" class="mat-name" placeholder="Ex: Tomada de Embutir" style="width:100%;"></td>
-                    <td><input type="text" class="mat-brand" placeholder="Ex: Tramontina" style="width:100%;"></td>
-                    <td><input type="number" class="mat-price" value="0.00" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateMaterialRow(this)"></td>
-                    <td><input type="number" class="mat-qty" value="0" min="0" style="width:100%; text-align:center;" oninput="calculateMaterialRow(this)"></td>
-                    <td class="mat-total td-total">R$ 0,00</td>
-                    <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'materials')">X</button></td>
-                </tr>
-            </tbody>
-        </table>
-        <button class="btn no-print" onclick="addMaterialRow()" style="margin-bottom: 25px;">+ Adicionar Material</button>
-
-        <div class="section-title">Mão de Obra</div>
-        <table id="labor-table">
-            <thead>
-                <tr>
-                    <th style="width: 30%;">Instalação / Serviço</th>
-                    <th style="width: 30%;">Item / Descrição</th>
-                    <th style="width: 15%;">Valor Und</th>
-                    <th style="width: 10%;">Qtd</th>
-                    <th style="width: 15%;">Valor Total</th>
-                    <th class="no-print" style="width: 5%;"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><input type="text" class="labor-service" placeholder="Ex: Instalação Elétrica" style="width:100%;"></td>
-                    <td><input type="text" class="labor-desc" placeholder="Ex: Tomada" style="width:100%;"></td>
-                    <td><input type="number" class="labor-price" value="0.00" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateLaborRow(this)"></td>
-                    <td><input type="number" class="labor-qty" value="0" min="0" style="width:100%; text-align:center;" oninput="calculateLaborRow(this)"></td>
-                    <td class="labor-total td-total">R$ 0,00</td>
-                    <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'labor')">X</button></td>
-                </tr>
-            </tbody>
-        </table>
-        <button class="btn no-print" onclick="addLaborRow()">+ Adicionar Mão de Obra</button>
-    </div>
-
-    <div class="page" id="page-3">
-        <div class="section-title">Deslocamento</div>
-        <div class="grid-4">
-            <div class="form-group">
-                <label>Origem</label>
-                <input type="text" id="travel-origin" value="CARUARU">
-            </div>
-            <div class="form-group">
-                <label>Endereço Serviço / N°</label>
-                <input type="text" id="travel-dest" placeholder="Ex: Av. Agamenon Magalhães, 100">
-            </div>
-            <div class="form-group">
-                <label>KM (Ida e Volta)</label>
-                <input type="number" id="travel-km" value="0" min="0" step="0.1" oninput="calculateTravel()">
-            </div>
-            <div class="form-group">
-                <label>Valor por KM (R$)</label>
-                <input type="number" id="travel-rate" value="1.25" min="0" step="0.01" oninput="calculateTravel()">
-            </div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div>
-                <button class="btn no-print" style="background-color: #0284c7;" onclick="openMap()">Abrir no Mapa 🗺️</button>
-            </div>
-            <div style="font-size: 13px; font-weight: bold;">
-                Total Deslocamento: <span id="travel-total" style="color: var(--secondary-color);">R$ 0,00</span>
-            </div>
-        </div>
-
-        <div class="footer-grid">
-            <div class="form-group">
-                <label>Observações Adicionais</label>
-                <textarea id="obs" rows="8" placeholder="Ex: Condições de pagamento, prazos de entrega, etc..."></textarea>
-            </div>
-
-            <div class="totals-box">
-                <div class="total-row">
-                    <span>Total Material:</span>
-                    <span id="summary-material">R$ 0,00</span>
+    <div class="page active" id="page-welcome">
+        <div class="welcome-screen">
+            <div class="welcome-title">Gerador de Orçamentos</div>
+            <div class="welcome-subtitle">Escolha uma das opções abaixo para iniciar</div>
+            
+            <div class="menu-buttons">
+                <div class="menu-card" onclick="startNewBudget()">
+                    <span class="menu-icon">➕</span>
+                    <h3>Criar Orçamento</h3>
+                    <p>Preencher dados e gerar um novo PDF</p>
                 </div>
-                <div class="total-row">
-                    <span>Total Mão de Obra:</span>
-                    <span id="summary-labor">R$ 0,00</span>
-                </div>
-                <div class="total-row">
-                    <span>Total Deslocamento:</span>
-                    <span id="summary-travel">R$ 0,00</span>
-                </div>
-                <div class="total-row">
-                    <span>Total Geral bruto:</span>
-                    <span id="summary-gross">R$ 0,00</span>
-                </div>
-                <div class="total-row" style="align-items: center; padding: 3px 0;">
-                    <span>Desconto (%):</span>
-                    <input type="number" id="discount-percent" value="0" min="0" max="100" style="width: 70px; text-align: right; padding: 4px;" oninput="updateAllTotals()">
-                </div>
-                <div class="total-row highlight">
-                    <span>Valor Final:</span>
-                    <span id="summary-final">R$ 0,00</span>
+                <div class="menu-card" onclick="goToSavedBudgets()">
+                    <span class="menu-icon">📂</span>
+                    <h3>Ver Salvos</h3>
+                    <p>Visualizar, editar e gerenciar orçamentos</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="page" id="page-4">
-        <div class="section-title" style="background-color: #10b981;">Histórico de Orçamentos Salvos</div>
+    <div id="main-interface" style="display: none;">
         
-        <table id="database-table">
-            <thead>
-                <tr>
-                    <th>Nº Doc</th>
-                    <th>Data</th>
-                    <th>Cliente</th>
-                    <th>WhatsApp</th>
-                    <th>Valor Final</th>
-                    <th style="width: 25%; text-align: center;">Ações</th>
-                </tr>
-            </thead>
-            <tbody id="database-tbody">
-                </tbody>
+        <table class="header-table">
+            <tr>
+                <td style="border: none; padding: 0;">
+                    <div class="header-title">Orçamento Técnico</div>
+                </td>
+                <td style="border: none; padding: 0; text-align: right; font-size: 13px;">
+                    <p><strong>Nº Doc:</strong> <span id="doc-id">--</span></p>
+                    <p><strong>Realizado:</strong> <span id="current-date">--/--/----</span></p>
+                    <p><strong>Validade:</strong> <input type="text" id="validity" value="10 dias" style="width: 70px; text-align: right; background: transparent; font-weight: bold;"></p>
+                </td>
+            </tr>
         </table>
-        <p id="empty-db-message" style="text-align: center; color: #64748b; padding: 20px; font-style: italic;">Nenhum orçamento salvo neste dispositivo.</p>
-    </div>
 
-    <div class="navigation-actions no-print">
-        <button class="btn btn-secondary" id="btn-prev" onclick="changeStep(-1)" disabled>Voltar</button>
-        <div>
-            <button class="btn btn-secondary" onclick="resetForm()" style="margin-right: 10px;">Limpar Tela</button>
-            <button class="btn" id="btn-save" style="background-color: #10b981; margin-right: 10px; display: none;" onclick="saveBudgetToDatabase()">Salvar Orçamento 💾</button>
-            <button class="btn" id="btn-next" onclick="changeStep(1)">Avançar</button>
-            <button class="btn" id="btn-print" style="background-color: #10b981; display: none;" onclick="window.print()">Gerar PDF / Imprimir 🖨️</button>
+        <div class="step-indicator no-print">
+            <div class="step" id="step-1" onclick="navigateToStep(1)">1
+                <span class="step-label">Cliente</span>
+            </div>
+            <div class="step" id="step-2" onclick="navigateToStep(2)">2
+                <span class="step-label">Itens & Serviços</span>
+            </div>
+            <div class="step" id="step-3" onclick="navigateToStep(3)">3
+                <span class="step-label">Resumo Final</span>
+            </div>
+            <div class="step" id="step-4" onclick="navigateToStep(4)" style="background-color: #10b981; color: white;">📂
+                <span class="step-label" style="color: #10b981;">Salvos</span>
+            </div>
         </div>
+
+        <div class="page" id="page-1">
+            <div class="section-title">Dados do Cliente</div>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Nome / Responsável</label>
+                    <input type="text" id="client-name" placeholder="Ex: João Silva">
+                </div>
+                <div class="form-group">
+                    <label>Empresa</label>
+                    <input type="text" id="client-company" placeholder="Nome da Empresa">
+                </div>
+                <div class="form-group">
+                    <label>CPF / CNPJ</label>
+                    <input type="text" id="client-document" placeholder="000.000.000-00">
+                </div>
+            </div>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Logradouro</label>
+                    <input type="text" id="client-address" placeholder="Rua, Avenida...">
+                </div>
+                <div class="form-group">
+                    <label>Nº</label>
+                    <input type="text" id="client-num" placeholder="123">
+                </div>
+                <div class="form-group">
+                    <label>CEP</label>
+                    <input type="text" id="client-cep" placeholder="00000-000">
+                </div>
+            </div>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Complemento</label>
+                    <input type="text" id="client-comp" placeholder="Apto, Sala, Bloco...">
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp</label>
+                    <input type="text" id="client-whatsapp" placeholder="(00) 00000-0000">
+                </div>
+                <div class="form-group">
+                    <label>Telefone</label>
+                    <input type="text" id="client-phone" placeholder="(00) 0000-0000">
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-2">
+            <div class="section-title">Materiais</div>
+            <table id="materials-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Material</th>
+                        <th style="width: 20%;">Marca</th>
+                        <th style="width: 15%;">Valor Und</th>
+                        <th style="width: 10%;">Qtd</th>
+                        <th style="width: 15%;">Valor Total</th>
+                        <th class="no-print" style="width: 5%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" class="mat-name" placeholder="Ex: Tomada de Embutir" style="width:100%;"></td>
+                        <td><input type="text" class="mat-brand" placeholder="Ex: Tramontina" style="width:100%;"></td>
+                        <td><input type="number" class="mat-price" value="0.00" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateMaterialRow(this)"></td>
+                        <td><input type="number" class="mat-qty" value="0" min="0" style="width:100%; text-align:center;" oninput="calculateMaterialRow(this)"></td>
+                        <td class="mat-total td-total">R$ 0,00</td>
+                        <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'materials')">X</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn no-print" onclick="addMaterialRow()" style="margin-bottom: 25px;">+ Adicionar Material</button>
+
+            <div class="section-title">Mão de Obra</div>
+            <table id="labor-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Instalação / Serviço</th>
+                        <th style="width: 30%;">Item / Descrição</th>
+                        <th style="width: 15%;">Valor Und</th>
+                        <th style="width: 10%;">Qtd</th>
+                        <th style="width: 15%;">Valor Total</th>
+                        <th class="no-print" style="width: 5%;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" class="labor-service" placeholder="Ex: Instalação Elétrica" style="width:100%;"></td>
+                        <td><input type="text" class="labor-desc" placeholder="Ex: Tomada" style="width:100%;"></td>
+                        <td><input type="number" class="labor-price" value="0.00" min="0" step="0.01" style="width:100%; text-align:right;" oninput="calculateLaborRow(this)"></td>
+                        <td><input type="number" class="labor-qty" value="0" min="0" style="width:100%; text-align:center;" oninput="calculateLaborRow(this)"></td>
+                        <td class="labor-total td-total">R$ 0,00</td>
+                        <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'labor')">X</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn no-print" onclick="addLaborRow()">+ Adicionar Mão de Obra</button>
+        </div>
+
+        <div class="page" id="page-3">
+            <div class="section-title">Deslocamento</div>
+            <div class="grid-4">
+                <div class="form-group">
+                    <label>Origem</label>
+                    <input type="text" id="travel-origin" value="CARUARU">
+                </div>
+                <div class="form-group">
+                    <label>Endereço Serviço / N°</label>
+                    <input type="text" id="travel-dest" placeholder="Ex: Av. Agamenon Magalhães, 100">
+                </div>
+                <div class="form-group">
+                    <label>KM (Ida e Volta)</label>
+                    <input type="number" id="travel-km" value="0" min="0" step="0.1" oninput="calculateTravel()">
+                </div>
+                <div class="form-group">
+                    <label>Valor por KM (R$)</label>
+                    <input type="number" id="travel-rate" value="1.25" min="0" step="0.01" oninput="calculateTravel()">
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <button class="btn no-print" style="background-color: #0284c7;" onclick="openMap()">Abrir no Mapa 🗺️</button>
+                </div>
+                <div style="font-size: 13px; font-weight: bold;">
+                    Total Deslocamento: <span id="travel-total" style="color: var(--secondary-color);">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="footer-grid">
+                <div class="form-group">
+                    <label>Observações Adicionais</label>
+                    <textarea id="obs" rows="8" placeholder="Ex: Condições de pagamento, prazos de entrega, etc..."></textarea>
+                </div>
+
+                <div class="totals-box">
+                    <div class="total-row">
+                        <span>Total Material:</span>
+                        <span id="summary-material">R$ 0,00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total Mão de Obra:</span>
+                        <span id="summary-labor">R$ 0,00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total Deslocamento:</span>
+                        <span id="summary-travel">R$ 0,00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Total Geral bruto:</span>
+                        <span id="summary-gross">R$ 0,00</span>
+                    </div>
+                    <div class="total-row" style="align-items: center; padding: 3px 0;">
+                        <span>Desconto (%):</span>
+                        <input type="number" id="discount-percent" value="0" min="0" max="100" style="width: 70px; text-align: right; padding: 4px;" oninput="updateAllTotals()">
+                    </div>
+                    <div class="total-row highlight">
+                        <span>Valor Final:</span>
+                        <span id="summary-final">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-4">
+            <div class="section-title" style="background-color: #10b981;">Orçamentos Salvos neste Aparelho</div>
+            
+            <table id="database-table">
+                <thead>
+                    <tr>
+                        <th>Nº Doc</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>WhatsApp</th>
+                        <th>Valor Final</th>
+                        <th style="width: 25%; text-align: center;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="database-tbody">
+                    </tbody>
+            </table>
+            <p id="empty-db-message" style="text-align: center; color: #64748b; padding: 20px; font-style: italic;">Nenhum orçamento salvo no navegador.</p>
+        </div>
+
+        <div class="navigation-actions no-print">
+            <div>
+                <button class="btn btn-secondary" id="btn-back-menu" onclick="backToMainMenu()">Menu Principal 🏠</button>
+                <button class="btn btn-secondary" id="btn-prev" onclick="changeStep(-1)">Voltar</button>
+            </div>
+            <div>
+                <button class="btn btn-secondary" id="btn-clear" onclick="resetForm()" style="margin-right: 10px;">Limpar Tela</button>
+                <button class="btn" id="btn-save" style="background-color: #10b981; margin-right: 10px; display: none;" onclick="saveBudgetToLocalStorage()">Salvar 💾</button>
+                <button class="btn" id="btn-next" onclick="changeStep(1)">Avançar</button>
+                <button class="btn" id="btn-print" style="background-color: #10b981; display: none;" onclick="window.print()">Gerar PDF / Imprimir 🖨️</button>
+            </div>
+        </div>
+
     </div>
 
 </div>
 
 <script>
-    // Inicialização da página
+    // --- GERADOR DE NÚMERO SEQUENCIAL INTELIGENTE ---
+    function generateNextDocId() {
+        const currentYear2Digits = new Date().getFullYear().toString().slice(-2); // Ex: "26" em 2026
+        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        
+        // Filtra apenas os orçamentos que pertencem ao ano atual
+        const currentYearBudgets = savedBudgets.filter(b => {
+            if (!b.clientData || !b.clientData.docId) return false;
+            const docIdStr = String(b.clientData.docId);
+            return docIdStr.startsWith(currentYear2Digits) && docIdStr.length === 5;
+        });
+        
+        let nextSeq = 1;
+        if (currentYearBudgets.length > 0) {
+            // Extrai a sequência numérica e descobre o maior
+            const sequences = currentYearBudgets.map(b => parseInt(String(b.clientData.docId).slice(2), 10));
+            const maxSeq = Math.max(...sequences);
+            nextSeq = maxSeq + 1;
+        }
+        
+        const formattedSeq = String(nextSeq).padStart(3, '0');
+        return `${currentYear2Digits}${formattedSeq}`;
+    }
+
+    // Inicialização de Data no carregamento
     document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR');
-    document.getElementById('doc-id').innerText = Math.floor(Math.random() * 90000) + 10000;
 
     let currentStep = 1;
 
-    // --- CONTROLE DE PAGINAÇÃO / WIZARD ---
+    // --- CONTROLES DA TELA INICIAL ---
+    function startNewBudget() {
+        document.getElementById('page-welcome').style.display = 'none';
+        document.getElementById('main-interface').style.display = 'block';
+        
+        // Atribui o novo ID e reseta os passos
+        document.getElementById('doc-id').innerText = generateNextDocId();
+        
+        navigateToStep(1);
+    }
+
+    function goToSavedBudgets() {
+        document.getElementById('page-welcome').style.display = 'none';
+        document.getElementById('main-interface').style.display = 'block';
+        navigateToStep(4);
+    }
+
+    function backToMainMenu() {
+        if (currentStep !== 4 && currentStep !== 1) {
+            if (!confirm("Deseja mesmo voltar ao Menu Inicial? Dados não salvos serão perdidos.")) {
+                return;
+            }
+        }
+        // Esconde interface principal e mostra o menu de novo
+        document.getElementById('main-interface').style.display = 'none';
+        document.getElementById('page-welcome').style.display = 'block';
+        
+        // Desativa as abas ativas
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        
+        document.getElementById('page-welcome').classList.add('active');
+        currentStep = 1;
+    }
+
+    // --- NAVEGAÇÃO WIZARD ---
     function navigateToStep(step) {
-        // Se formos para a tela de Banco de Dados, atualiza a lista de registros salvos primeiro
         if (step === 4) {
             loadSavedBudgets();
         }
 
-        document.getElementById(`page-${currentStep}`).classList.remove('active');
-        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        // Desativa a aba atual se ela existir
+        const prevPage = document.getElementById(`page-${currentStep}`);
+        const prevStep = document.getElementById(`step-${currentStep}`);
+        if (prevPage) prevPage.classList.remove('active');
+        if (prevStep) prevStep.classList.remove('active');
 
         currentStep = step;
 
-        document.getElementById(`page-${currentStep}`).classList.add('active');
-        document.getElementById(`step-${currentStep}`).classList.add('active');
+        // Ativa a nova aba
+        const nextPage = document.getElementById(`page-${currentStep}`);
+        const nextStep = document.getElementById(`step-${currentStep}`);
+        if (nextPage) nextPage.classList.add('active');
+        if (nextStep) nextStep.classList.add('active');
 
         updateNavigationButtons();
     }
@@ -575,21 +736,34 @@
     }
 
     function updateNavigationButtons() {
-        document.getElementById('btn-prev').disabled = currentStep === 1;
-
-        // Controle do botão de "Salvar Orçamento" e "Imprimir"
-        if (currentStep === 3) {
-            document.getElementById('btn-next').style.display = 'none';
-            document.getElementById('btn-save').style.display = 'inline-block';
-            document.getElementById('btn-print').style.display = 'inline-block';
-        } else if (currentStep === 4) {
-            document.getElementById('btn-next').style.display = 'none';
-            document.getElementById('btn-save').style.display = 'none';
-            document.getElementById('btn-print').style.display = 'none';
+        // Habilita/Desabilita botão de voltar
+        const btnPrev = document.getElementById('btn-prev');
+        if (currentStep === 1) {
+            btnPrev.setAttribute('disabled', 'true');
         } else {
-            document.getElementById('btn-next').style.display = 'inline-block';
+            btnPrev.removeAttribute('disabled');
+        }
+
+        // Ajusta botões conforme a aba ativa
+        if (currentStep === 4) {
+            document.getElementById('btn-prev').style.display = 'none';
+            document.getElementById('btn-next').style.display = 'none';
             document.getElementById('btn-save').style.display = 'none';
             document.getElementById('btn-print').style.display = 'none';
+            document.getElementById('btn-clear').style.display = 'none';
+        } else {
+            document.getElementById('btn-prev').style.display = 'inline-block';
+            document.getElementById('btn-clear').style.display = 'inline-block';
+            
+            if (currentStep === 3) {
+                document.getElementById('btn-next').style.display = 'none';
+                document.getElementById('btn-save').style.display = 'inline-block';
+                document.getElementById('btn-print').style.display = 'inline-block';
+            } else {
+                document.getElementById('btn-next').style.display = 'inline-block';
+                document.getElementById('btn-save').style.display = 'none';
+                document.getElementById('btn-print').style.display = 'none';
+            }
         }
     }
 
@@ -651,7 +825,7 @@
         updateAllTotals();
     }
 
-    // --- CÁLCULOS DE DESLOCAMENTO ---
+    // --- DESLOCAMENTO ---
     function calculateTravel() {
         const km = parseFloat(document.getElementById('travel-km').value) || 0;
         const rate = parseFloat(document.getElementById('travel-rate').value) || 0;
@@ -671,7 +845,7 @@
         }
     }
 
-    // --- ATUALIZAÇÃO DOS TOTAIS GERAIS ---
+    // --- TOTAIS ---
     function updateAllTotals() {
         let totalMaterials = 0;
         document.querySelectorAll('#materials-table tbody tr').forEach(row => {
@@ -705,30 +879,45 @@
         return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    // --- BANCO DE DADOS LOCAL (LOCALSTORAGE) ---
-    function saveBudgetToDatabase() {
+    // --- SALVAMENTO LOCAL (LOCALSTORAGE) ---
+    function saveBudgetToLocalStorage() {
         const docId = document.getElementById('doc-id').innerText;
         const date = document.getElementById('current-date').innerText;
-        
-        // Coleta de dados básicos
-        const clientData = {
-            docId, date,
-            validity: document.getElementById('validity').value,
-            name: document.getElementById('client-name').value,
-            company: document.getElementById('client-company').value,
-            document: document.getElementById('client-document').value,
-            address: document.getElementById('client-address').value,
-            num: document.getElementById('client-num').value,
-            cep: document.getElementById('client-cep').value,
-            comp: document.getElementById('client-comp').value,
-            whatsapp: document.getElementById('client-whatsapp').value,
-            phone: document.getElementById('client-phone').value,
+        const name = document.getElementById('client-name').value;
+        const whatsapp = document.getElementById('client-whatsapp').value;
+        const finalValue = document.getElementById('summary-final').innerText;
+
+        const budget = {
+            clientData: {
+                docId, date,
+                validity: document.getElementById('validity').value,
+                name,
+                company: document.getElementById('client-company').value,
+                document: document.getElementById('client-document').value,
+                address: document.getElementById('client-address').value,
+                num: document.getElementById('client-num').value,
+                cep: document.getElementById('client-cep').value,
+                comp: document.getElementById('client-comp').value,
+                whatsapp,
+                phone: document.getElementById('client-phone').value,
+            },
+            materials: [],
+            labor: [],
+            travel: {
+                origin: document.getElementById('travel-origin').value,
+                dest: document.getElementById('travel-dest').value,
+                km: parseFloat(document.getElementById('travel-km').value) || 0,
+                rate: parseFloat(document.getElementById('travel-rate').value) || 1.25
+            },
+            totals: {
+                discount: parseFloat(document.getElementById('discount-percent').value) || 0,
+                obs: document.getElementById('obs').value,
+                finalValue
+            }
         };
 
-        // Coleta dos materiais
-        const materials = [];
         document.querySelectorAll('#materials-table tbody tr').forEach(row => {
-            materials.push({
+            budget.materials.push({
                 name: row.querySelector('.mat-name').value,
                 brand: row.querySelector('.mat-brand').value,
                 price: parseFloat(row.querySelector('.mat-price').value) || 0,
@@ -736,10 +925,8 @@
             });
         });
 
-        // Coleta de Mão de Obra
-        const labor = [];
         document.querySelectorAll('#labor-table tbody tr').forEach(row => {
-            labor.push({
+            budget.labor.push({
                 service: row.querySelector('.labor-service').value,
                 desc: row.querySelector('.labor-desc').value,
                 price: parseFloat(row.querySelector('.labor-price').value) || 0,
@@ -747,44 +934,28 @@
             });
         });
 
-        // Coleta de Deslocamento e Totais
-        const travel = {
-            origin: document.getElementById('travel-origin').value,
-            dest: document.getElementById('travel-dest').value,
-            km: parseFloat(document.getElementById('travel-km').value) || 0,
-            rate: parseFloat(document.getElementById('travel-rate').value) || 1.25
-        };
+        let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
 
-        const totals = {
-            discount: parseFloat(document.getElementById('discount-percent').value) || 0,
-            obs: document.getElementById('obs').value,
-            finalValue: document.getElementById('summary-final').innerText
-        };
-
-        const budget = { clientData, materials, labor, travel, totals };
-
-        // Puxa banco existente ou inicia vazio
-        let savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
-        
-        // Substitui se for o mesmo ID (edição), senão adiciona um novo
-        const existingIndex = savedBudgets.findIndex(item => item.clientData.docId === docId);
-        if (existingIndex > -1) {
-            savedBudgets[existingIndex] = budget;
+        const index = savedBudgets.findIndex(b => b.clientData.docId === docId);
+        if (index > -1) {
+            savedBudgets[index] = budget;
         } else {
             savedBudgets.push(budget);
         }
 
-        localStorage.setItem('my_budgets', JSON.stringify(savedBudgets));
-        alert('Orçamento salvo com sucesso no banco de dados local!');
-        navigateToStep(4); // Vai para a tela de banco de dados
+        localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
+
+        alert('Orçamento salvo com sucesso neste aparelho!');
+        
+        navigateToStep(4);
     }
 
     function loadSavedBudgets() {
-        const savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
         const tbody = document.getElementById('database-tbody');
         const emptyMsg = document.getElementById('empty-db-message');
-        
         tbody.innerHTML = '';
+
+        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
 
         if (savedBudgets.length === 0) {
             emptyMsg.style.display = 'block';
@@ -793,7 +964,10 @@
 
         emptyMsg.style.display = 'none';
 
-        savedBudgets.forEach(budget => {
+        // Ordena do mais recente para o mais antigo
+        const displayList = [...savedBudgets].reverse();
+
+        displayList.forEach(budget => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>#${budget.clientData.docId}</strong></td>
@@ -802,8 +976,8 @@
                 <td>${budget.clientData.whatsapp || '--'}</td>
                 <td style="color: var(--secondary-color); font-weight: bold;">${budget.totals.finalValue}</td>
                 <td style="text-align: center;">
-                    <button class="btn" style="background-color: #0284c7; padding: 4px 8px; font-size: 10px;" onclick='viewBudget("${budget.clientData.docId}")'>Abrir 📂</button>
-                    <button class="btn btn-danger" style="padding: 4px 8px; font-size: 10px;" onclick='deleteBudget("${budget.clientData.docId}")'>Deletar 🗑️</button>
+                    <button class="btn" style="background-color: #0284c7; padding: 4px 8px; font-size: 10px;" onclick="viewBudget('${budget.clientData.docId}')">Abrir 📂</button>
+                    <button class="btn btn-danger" style="padding: 4px 8px; font-size: 10px;" onclick="deleteBudget('${budget.clientData.docId}')">Apagar 🗑️</button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -811,10 +985,13 @@
     }
 
     function viewBudget(docId) {
-        const savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
-        const budget = savedBudgets.find(item => item.clientData.docId === docId);
+        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        const budget = savedBudgets.find(b => b.clientData.docId === docId);
 
-        if (!budget) return;
+        if (!budget) {
+            alert('Orçamento não encontrado!');
+            return;
+        }
 
         // Restaura cabeçalho
         document.getElementById('doc-id').innerText = budget.clientData.docId;
@@ -835,7 +1012,7 @@
         // Restaura materiais
         const matTbody = document.querySelector('#materials-table tbody');
         matTbody.innerHTML = '';
-        if (budget.materials.length > 0) {
+        if (budget.materials && budget.materials.length > 0) {
             budget.materials.forEach(mat => addMaterialRow(mat));
         } else {
             addMaterialRow();
@@ -844,7 +1021,7 @@
         // Restaura mão de obra
         const laborTbody = document.querySelector('#labor-table tbody');
         laborTbody.innerHTML = '';
-        if (budget.labor.length > 0) {
+        if (budget.labor && budget.labor.length > 0) {
             budget.labor.forEach(lab => addLaborRow(lab));
         } else {
             addLaborRow();
@@ -856,26 +1033,26 @@
         document.getElementById('travel-km').value = budget.travel.km;
         document.getElementById('travel-rate').value = budget.travel.rate;
 
-        // Restaura Observações e Desconto
+        // Restaura observações e descontos
         document.getElementById('obs').value = budget.totals.obs;
         document.getElementById('discount-percent').value = budget.totals.discount;
 
         updateAllTotals();
-        navigateToStep(1); // Volta pro passo 1 para o usuário poder editar ou re-imprimir
+        navigateToStep(1); // Direciona para a primeira aba de formulário
     }
 
     function deleteBudget(docId) {
-        if (confirm(`Tem certeza que deseja deletar o orçamento #${docId}?`)) {
-            let savedBudgets = JSON.parse(localStorage.getItem('my_budgets')) || [];
-            savedBudgets = savedBudgets.filter(item => item.clientData.docId !== docId);
-            localStorage.setItem('my_budgets', JSON.stringify(savedBudgets));
+        if (confirm(`Tem certeza que deseja apagar o orçamento #${docId} deste navegador?`)) {
+            let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+            savedBudgets = savedBudgets.filter(b => b.clientData.docId !== docId);
+            localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
             loadSavedBudgets();
         }
     }
 
     function resetForm() {
-        if(confirm('Tem certeza que deseja apagar todos os dados digitados na tela?')) {
-            window.location.reload();
+        if(confirm('Tem certeza que deseja limpar a tela? Os dados digitados serão perdidos e um NOVO número sequencial será gerado.')) {
+            window.location.reload(); 
         }
     }
 </script>
