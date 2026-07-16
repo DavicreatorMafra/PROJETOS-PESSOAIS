@@ -632,7 +632,7 @@
             </div>
         </div>
 
-        <div class="step-indicator no-print">
+        <div class="step-indicator no-print" id="step-indicator" style="display: none;">
             <div class="step" id="step-1" onclick="navigateToStep(1)">1
                 <span class="step-label">Cliente</span>
             </div>
@@ -977,11 +977,11 @@
                 <button class="btn btn-secondary" id="btn-prev-bottom" onclick="changeStep(-1)" style="display: none;">⬅ Voltar Passo</button>
             </div>
             <div>
-                <button class="btn" id="btn-next" onclick="changeStep(1)">Avançar</button>
                 <button class="btn" id="btn-save" style="background-color: var(--success-color); display: none;" onclick="saveBudgetToLocalStorage()">Salvar 💾</button>
+                <button class="btn" id="btn-next" onclick="changeStep(1)">Avançar</button>
                 <button class="btn" id="btn-print" style="background-color: #64748b; display: none;" onclick="window.print()">IMPRIMIR 🖨️</button>
-                <button class="btn" id="btn-map-route" style="background-color: #0284c7; display: none;" onclick="openMapRoute()">🗺️ Abrir Rota no Mapa</button>
                 <button class="btn" id="btn-whatsapp" style="background-color: #25d366; display: none;" onclick="shareBudget()">Enviar ✈️</button>
+                <button class="btn" id="btn-map-route" style="background-color: #0284c7; display: none;" onclick="openMapRoute()">🗺️ Abrir Rota no Mapa</button>
                 <button class="btn" id="btn-edit" style="background-color: #f59e0b; display: none;" onclick="editCurrentBudget()">✏️ Editar</button>
             </div>
         </div>
@@ -1193,6 +1193,15 @@
 
     // --- NAVEGAÇÃO DOS PASSOS ---
     function navigateToStep(step) {
+        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        const currentDocId = document.getElementById('doc-id').innerText;
+        const hasBeenSavedBefore = savedBudgets.some(b => b.clientData && b.clientData.docId === currentDocId);
+
+        if (hasBeenSavedBefore && !isEditing && step !== 4 && step !== 5) {
+            alert('Este orçamento já foi salvo. Para alterar as etapas, clique em Editar.');
+            return;
+        }
+
         // Bloqueia avanço caso o nome do cliente esteja vazio no passo 1
         // (não bloqueia acesso aos orçamentos salvos - step 5)
         if (currentStep === 1 && step > 1 && step !== 5) {
@@ -1255,19 +1264,37 @@
         const btnClear = document.getElementById('btn-clear');
         const btnMap = document.getElementById('btn-map-route');
         const btnEdit = document.getElementById('btn-edit');
+        const stepIndicator = document.getElementById('step-indicator');
 
         // Reset all
         [btnPrevBottom, btnNext, btnSave, btnPrint, btnShare, btnClear, btnMap, btnEdit].forEach(b => b.style.display = 'none');
 
+        if (stepIndicator) {
+            stepIndicator.style.display = isEditing ? 'flex' : 'none';
+        }
+
+        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        const currentDocId = document.getElementById('doc-id').innerText;
+        const hasBeenSavedBefore = savedBudgets.some(b => b.clientData && b.clientData.docId === currentDocId);
+
         if (currentStep === 5) return;
 
         if (currentStep === 4) {
-            // Visualização final: apenas Imprimir, Enviar e Editar
-            btnPrint.style.display = 'inline-block';
-            btnShare.style.display = 'inline-block';
-            btnEdit.style.display = 'inline-block';
-            // Mapa somente quando visualizando orçamento salvo
-            if (viewingSavedBudget && document.getElementById('travel-active').checked) {
+            // Etapa 4: mostrar Salvar na primeira vez; depois esconder e só reaparecer em edição
+            const currentDocId = document.getElementById('doc-id').innerText;
+            const isNewDraft = !hasBeenSavedBefore && currentDocId !== '--';
+
+            if (isEditing || isNewDraft) {
+                btnSave.style.display = 'inline-block';
+            }
+            if (!isEditing && hasBeenSavedBefore) {
+                btnPrint.style.display = 'inline-block';
+                btnShare.style.display = 'inline-block';
+                btnEdit.style.display = 'inline-block';
+            }
+            // Mapa somente quando houver orçamento salvo e deslocamento ativo, e não estiver em modo edição
+            const travelActive = document.getElementById('travel-active').checked;
+            if (hasBeenSavedBefore && travelActive && !isEditing) {
                 btnMap.style.display = 'inline-block';
             }
         } else {
@@ -1918,6 +1945,7 @@
     // Habilita edição (voltar para passo 1 mantendo dados)
     function editCurrentBudget() {
         isEditing = true;
+        updateNavigationButtons();
         navigateToStep(1);
     }
 
