@@ -423,11 +423,16 @@
         .pdf-preview {
             background: #fff;
             color: #000;
-            padding: 20px;
+            padding: 12mm;
             border: 1px solid #000;
-            margin-top: 15px;
+            margin: 15px auto 0 auto;
             font-size: 12px;
             line-height: 1.4;
+            width: 100%;
+            max-width: 210mm;
+            min-height: 297mm;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
         .pdf-header {
@@ -1639,7 +1644,65 @@
     }
 
     // --- EXPORTAR PDF E INTEGRAR COM WHATSAPP ---
-    function sendPDFToWhatsapp() {
+    function buildPdfExportElement() {
+        const source = document.getElementById('pdf-content');
+        const exportWrapper = document.createElement('div');
+        exportWrapper.id = 'pdf-export-wrapper';
+        exportWrapper.style.position = 'fixed';
+        exportWrapper.style.left = '-9999px';
+        exportWrapper.style.top = '0';
+        exportWrapper.style.width = '210mm';
+        exportWrapper.style.minHeight = '297mm';
+        exportWrapper.style.padding = '0';
+        exportWrapper.style.boxSizing = 'border-box';
+        exportWrapper.style.background = '#fff';
+        exportWrapper.style.color = '#000';
+        exportWrapper.style.fontFamily = 'Arial, sans-serif';
+        exportWrapper.style.zIndex = '-1';
+        exportWrapper.appendChild(source.cloneNode(true));
+        document.body.appendChild(exportWrapper);
+
+        requestAnimationFrame(() => {
+            exportWrapper.querySelectorAll('*').forEach(el => {
+                el.style.maxWidth = '100%';
+                el.style.wordBreak = 'break-word';
+            });
+        });
+
+        return exportWrapper;
+    }
+
+    async function exportBudgetPdf(filename, saveToDisk = false) {
+        const exportElement = buildPdfExportElement();
+        const opt = {
+            margin: [8, 8, 8, 8],
+            filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                scrollX: 0,
+                scrollY: 0,
+                logging: false,
+                useCORS: true
+            },
+            pagebreak: { mode: ['avoid-all', 'css'] },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        await new Promise(resolve => setTimeout(resolve, 120));
+
+        try {
+            if (saveToDisk) {
+                await html2pdf().set(opt).from(exportElement).save();
+                return null;
+            }
+            return await html2pdf().set(opt).from(exportElement).outputPdf('blob');
+        } finally {
+            exportElement.remove();
+        }
+    }
+
+    async function sendPDFToWhatsapp() {
         const clientPhone = document.getElementById('client-whatsapp').value.replace(/\D/g, '');
         const clientName = document.getElementById('client-name').value || 'Cliente';
         const docId = document.getElementById('doc-id').innerText;
@@ -1651,20 +1714,10 @@
             return;
         }
 
-        const element = document.getElementById('pdf-content');
         const filename = `Orcamento_Solucoes_Eletricas_${docId}.pdf`;
-        
-        const opt = {
-            margin:       10,
-            filename:     filename,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2 },
-            // Evita a quebra desconexa de elementos, movendo o bloco financeiro se necessário
-            pagebreak:    { mode: ['avoid-all', 'css'] },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
 
-        html2pdf().set(opt).from(element).save().then(() => {
+        try {
+            await exportBudgetPdf(filename, true);
             const msg = encodeURIComponent(
                 `Olá, ${clientName}! ⚡\n` +
                 `Segue o documento digitalizado de seu *Orçamento Nº #${docId}*.\n\n` +
@@ -1675,7 +1728,10 @@
             
             const whatsappUrl = `https://api.whatsapp.com/send?phone=55${clientPhone}&text=${msg}`;
             window.open(whatsappUrl, '_blank');
-        });
+        } catch (error) {
+            console.error(error);
+            alert('Não foi possível gerar o PDF para envio. Tente novamente.');
+        }
     }
 
     function formatCurrency(value) {
@@ -1904,20 +1960,11 @@
 
     // --- COMPARTILHAMENTO NATIVO (Web Share API) ---
     async function shareBudget() {
-        const element = document.getElementById('pdf-content');
         const docId = document.getElementById('doc-id').innerText;
         const clientName = document.getElementById('client-name').value || 'Cliente';
         const filename = `Orcamento_${docId}.pdf`;
-        const opt = {
-            margin: 10, filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            pagebreak: { mode: ['avoid-all', 'css'] },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
         try {
-            const worker = html2pdf().set(opt).from(element);
-            const blob = await worker.outputPdf('blob');
+            const blob = await exportBudgetPdf(filename);
             const file = new File([blob], filename, { type: 'application/pdf' });
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
