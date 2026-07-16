@@ -992,8 +992,46 @@
 
 <script>
     // --- CONTROLE DE INICIALIZAÇÃO ---
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR');
+    let viewingSavedBudget = false;
+    let isEditing = false;
     let currentStep = 1;
+    let cachedTotals = {
+        materials: 0,
+        labor: 0,
+        travel: 0,
+        gross: 0,
+        discountPercent: 0,
+        discountValue: 0,
+        final: 0
+    };
+
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewDocId = urlParams.get('view');
+    const shouldEdit = urlParams.get('edit') === '1';
+
+    if (viewDocId) {
+        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        const budget = savedBudgets.find(b => b.clientData && b.clientData.docId === viewDocId);
+        if (budget) {
+            viewingSavedBudget = true;
+            document.getElementById('page-welcome').style.display = 'none';
+            document.getElementById('main-interface').style.display = 'block';
+            populateBudgetFromStorage(budget);
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-4').classList.add('active');
+            currentStep = 4;
+            if (shouldEdit) {
+                isEditing = true;
+                updateNavigationButtons();
+                navigateToStep(1);
+            } else {
+                updateNavigationButtons();
+                buildPDFContent();
+            }
+        }
+    }
 
     // --- GERADOR DE ID SEQUENCIAL ---
     function generateNextDocId() {
@@ -1101,10 +1139,6 @@
     }
 
 
-    // --- FLAG: estamos visualizando um orçamento salvo? ---
-    let viewingSavedBudget = false;
-    let isEditing = false;
-
     // --- Limpa automaticamente quando o valor é zero (para preenchimento rápido) ---
     function clearIfZero(input) {
         const v = parseFloat(input.value);
@@ -1170,9 +1204,7 @@
     }
 
     function goToSavedBudgets() {
-        document.getElementById('page-welcome').style.display = 'none';
-        document.getElementById('main-interface').style.display = 'block';
-        navigateToStep(5);
+        window.location.href = 'salvos.html';
     }
 
     function backToMainMenu() {
@@ -1355,7 +1387,7 @@
             <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'materials')">X</button></td>
         `;
         tbody.appendChild(tr);
-        calculateMaterialRow(tr.querySelector('.mat-price'));
+        try { calculateMaterialRow(tr.querySelector('.mat-price')); } catch (e) {}
     }
 
     function calculateMaterialRow(input) {
@@ -1395,7 +1427,7 @@
             <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'labor')">X</button></td>
         `;
         tbody.appendChild(tr);
-        calculateLaborRow(tr.querySelector('.labor-price'));
+        try { calculateLaborRow(tr.querySelector('.labor-price')); } catch (e) {}
     }
 
     function calculateLaborRow(input) {
@@ -1520,16 +1552,6 @@
     }
 
     // --- CÁLCULOS MATEMÁTICOS FINANCEIROS ---
-    let cachedTotals = {
-        materials: 0,
-        labor: 0,
-        travel: 0,
-        gross: 0,
-        discountPercent: 0,
-        discountValue: 0,
-        final: 0
-    };
-
     function updateAllTotals() {
         let totalMaterials = 0;
         document.querySelectorAll('#materials-table tbody tr').forEach(row => {
@@ -1550,16 +1572,17 @@
             totalTravel = (parseFloat(document.getElementById('travel-km').value) || 0) * (parseFloat(document.getElementById('travel-rate').value) || 0);
         }
 
-        const grossTotal = totalMaterials + totalLabor + totalTravel;
+        const subtotalForDiscount = totalMaterials + totalLabor;
         const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
-        const discountAmount = grossTotal * (discountPercent / 100);
-        const finalTotal = Math.max(0, grossTotal - discountAmount);
+        const discountAmount = subtotalForDiscount * (discountPercent / 100);
+        const discountedSubtotal = Math.max(0, subtotalForDiscount - discountAmount);
+        const finalTotal = discountedSubtotal + totalTravel;
 
         cachedTotals = {
             materials: totalMaterials,
             labor: totalLabor,
             travel: totalTravel,
-            gross: grossTotal,
+            gross: subtotalForDiscount,
             discountPercent: discountPercent,
             discountValue: discountAmount,
             final: finalTotal
@@ -1665,7 +1688,7 @@
         document.getElementById('pdf-total-materials').innerText = formatCurrency(cachedTotals.materials);
         document.getElementById('pdf-total-labor').innerText = formatCurrency(cachedTotals.labor);
         document.getElementById('pdf-total-travel').innerText = formatCurrency(cachedTotals.travel);
-        document.getElementById('pdf-total-gross').innerText = formatCurrency(cachedTotals.gross);
+        document.getElementById('pdf-total-gross').innerText = formatCurrency(cachedTotals.gross + cachedTotals.travel);
         document.getElementById('pdf-total-discount').innerText = `${cachedTotals.discountPercent}% (${formatCurrency(cachedTotals.discountValue)})`;
         document.getElementById('pdf-total-final').innerText = formatCurrency(cachedTotals.final);
     }
@@ -1766,7 +1789,7 @@
     }
 
     // --- CONTROLE DE LOCAL STORAGE ---
-    function saveBudgetToLocalStorage() {
+    async function saveBudgetToLocalStorage() {
         const docId = document.getElementById('doc-id').innerText;
         const date = document.getElementById('current-date').innerText;
         const name = document.getElementById('client-name').value;
@@ -1825,28 +1848,40 @@
             });
         });
 
-        let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
-
-        const index = savedBudgets.findIndex(b => b.clientData.docId === docId);
-        if (index > -1) {
-            savedBudgets[index] = budget;
-        } else {
-            savedBudgets.push(budget);
+        try {
+            const response = await fetch('/api/budgets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(budget)
+            });
+            if (!response.ok) throw new Error('Falha ao salvar');
+        } catch (error) {
+            console.error(error);
+            alert('Não foi possível salvar no servidor. O backup local será usado apenas neste navegador.');
+            let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+            const index = savedBudgets.findIndex(b => b.clientData.docId === docId);
+            if (index > -1) savedBudgets[index] = budget; else savedBudgets.push(budget);
+            localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
         }
 
-        localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
-
-        alert('Orçamento gravado com sucesso no dispositivo!');
+        alert('Orçamento gravado com sucesso no servidor!');
         isEditing = false;
-        navigateToStep(4);
+        window.location.href = `salvos.html?view=${encodeURIComponent(docId)}`;
     }
 
-    function loadSavedBudgets() {
+    async function loadSavedBudgets() {
         const tbody = document.getElementById('database-tbody');
         const emptyMsg = document.getElementById('empty-db-message');
         tbody.innerHTML = '';
 
-        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        let savedBudgets = [];
+        try {
+            const response = await fetch('/api/budgets');
+            if (!response.ok) throw new Error('Falha');
+            savedBudgets = await response.json();
+        } catch (error) {
+            savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        }
 
         if (savedBudgets.length === 0) {
             emptyMsg.style.display = 'block';
@@ -1874,14 +1909,8 @@
         });
     }
 
-    function viewBudget(docId) {
-        const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
-        const budget = savedBudgets.find(b => b.clientData.docId === docId);
-
-        if (!budget) {
-            alert('Registro não encontrado.');
-            return;
-        }
+    function populateBudgetFromStorage(budget) {
+        if (!budget || !budget.clientData) return;
 
         document.getElementById('doc-id').innerText = budget.clientData.docId;
         document.getElementById('current-date').innerText = budget.clientData.date;
@@ -1939,6 +1968,25 @@
 
         updateAllTotals();
         viewingSavedBudget = true;
+    }
+
+    async function viewBudget(docId) {
+        let savedBudgets = [];
+        try {
+            const response = await fetch('/api/budgets');
+            if (!response.ok) throw new Error('Falha');
+            savedBudgets = await response.json();
+        } catch (error) {
+            savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+        }
+        const budget = savedBudgets.find(b => b.clientData && b.clientData.docId === docId);
+
+        if (!budget) {
+            alert('Registro não encontrado.');
+            return;
+        }
+
+        populateBudgetFromStorage(budget);
         navigateToStep(4);
     }
 
@@ -1961,12 +2009,17 @@
         window.open(url, '_blank');
     }
 
-    function deleteBudget(docId) {
+    async function deleteBudget(docId) {
         if (confirm(`Deseja mesmo excluir o orçamento #${docId}?`)) {
-            let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
-            savedBudgets = savedBudgets.filter(b => b.clientData.docId !== docId);
-            localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
-            loadSavedBudgets();
+            try {
+                const response = await fetch(`/api/budgets/${encodeURIComponent(docId)}`, { method: 'DELETE' });
+                if (!response.ok) throw new Error('Falha');
+            } catch (error) {
+                let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+                savedBudgets = savedBudgets.filter(b => (b.clientData && b.clientData.docId) !== docId);
+                localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
+            }
+            await loadSavedBudgets();
         }
     }
 

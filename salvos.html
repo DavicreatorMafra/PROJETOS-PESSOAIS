@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Orçamentos Salvos</title>
+<style>
+  :root {
+    --primary-color: #0f172a;
+    --secondary-color: #2563eb;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --bg-color: #f1f5f9;
+    --card-bg: #ffffff;
+    --text-color: #1e293b;
+    --border-color: #cbd5e1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 950px;
+    background: var(--card-bg);
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 3px solid var(--primary-color);
+    padding-bottom: 15px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+
+  .header-title {
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--primary-color);
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .search {
+    flex: 1;
+    min-width: 220px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-color);
+  }
+
+  .btn {
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+    text-transform: uppercase;
+    transition: background-color 0.15s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .btn:hover, .btn:active { filter: brightness(1.05); }
+  .btn-secondary { background-color: #64748b; }
+  .btn-success { background-color: var(--success-color); }
+  .btn-danger { background-color: var(--danger-color); }
+
+  .section-title {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .card {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--secondary-color);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-weight: 700;
+    font-size: 16px;
+    margin: 0 0 4px;
+    color: var(--primary-color);
+  }
+
+  .card-meta {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.4;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: #64748b;
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    background: #f8fafc;
+  }
+
+  .empty h2 { color: var(--primary-color); margin-bottom: 6px; }
+
+  @media (max-width: 768px) {
+    .card-actions { flex-direction: column; }
+    .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header-container">
+    <div class="header-title">📁 Orçamentos Salvos</div>
+    <a href="index.html" class="btn btn-secondary">⬅ Voltar</a>
+  </div>
+
+  <div class="section-title">Lista de Orçamentos Gravados</div>
+
+  <div class="toolbar">
+    <input type="text" id="search" class="search" placeholder="🔎 Buscar por cliente, empresa, número ou WhatsApp..." oninput="renderList()">
+  </div>
+  <div id="list"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'local_budgets';
+
+function getBudgets() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveBudgets(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+function parseCurrency(value) {
+  if (value == null || value === '') return 0;
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const cleaned = value.replace(/[^0-9,.-]/g, '').trim();
+    if (!cleaned) return 0;
+    const normalized = cleaned.replace('.', '').replace(',', '.');
+    const parsed = parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+}
+
+function money(value) {
+  const n = parseCurrency(value);
+  return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function openBudget(docId) {
+  window.location.href = `index.html?view=${encodeURIComponent(docId)}`;
+}
+
+function renderList() {
+  const q = (document.getElementById('search').value || '').trim().toLowerCase();
+  const budgets = getBudgets().slice().reverse();
+  const filtered = q ? budgets.filter(b => {
+    const c = b.clientData || {};
+    return (c.name || '').toLowerCase().includes(q)
+      || (c.company || '').toLowerCase().includes(q)
+      || (c.docId || '').toLowerCase().includes(q)
+      || (c.whatsapp || '').toLowerCase().includes(q);
+  }) : budgets;
+
+  const listEl = document.getElementById('list');
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="empty">
+      <h2>Nenhum orçamento encontrado</h2>
+      <p>${budgets.length === 0 ? 'Ainda não existe nenhum orçamento salvo.' : 'Nenhum resultado para a busca.'}</p>
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(b => {
+    const c = b.clientData || {};
+    const t = b.totals || {};
+    const address = [c.address, c.num, c.comp].filter(Boolean).join(', ');
+    const totalValue = money(t.finalValue || t.final || 0);
+    return `
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <p class="card-title">${c.name || 'Sem nome'}${c.company ? ' — ' + c.company : ''}</p>
+            <p class="card-meta">Nº <strong>${c.docId || '—'}</strong> · ${c.date || ''}</p>
+            <p class="card-meta"><strong>Valor total:</strong> ${totalValue}</p>
+            <p class="card-meta"><strong>Endereço:</strong> ${address || 'Não informado'}</p>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-success" onclick="openBudget('${c.docId || ''}')">👁️ Abrir</button>
+          <button class="btn btn-danger" onclick="removeBudget('${c.docId || ''}')">🗑️ Excluir</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function removeBudget(docId) {
+  if (!docId || !confirm(`Excluir o orçamento #${docId}?`)) return;
+  const budgets = getBudgets().filter(b => (b.clientData && b.clientData.docId) !== docId);
+  saveBudgets(budgets);
+  renderList();
+}
+
+renderList();
+</script>
+</body>
+</html>
