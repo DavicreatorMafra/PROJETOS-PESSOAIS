@@ -173,7 +173,13 @@
 
   <div class="toolbar">
     <input type="text" id="search" class="search" placeholder="🔎 Buscar por cliente, empresa, número ou WhatsApp..." oninput="renderList()">
-  </div>
+    <select id="status-filter" onchange="renderList()" style="padding:10px;border:1px solid var(--border-color);border-radius:8px">
+      <option value="all">Todos os status</option>
+      <option value="pendente">Pendente</option>
+      <option value="em andamento">Em andamento</option>
+      <option value="realizado">Realizado</option>
+    </select>
+    </div>
   <div id="list"></div>
 </div>
 
@@ -222,13 +228,15 @@ function openBudgetMaterials(docId) {
 function renderList() {
   const q = (document.getElementById('search').value || '').trim().toLowerCase();
   const budgets = getBudgets().slice().reverse();
-  const filtered = q ? budgets.filter(b => {
+  const statusFilter = (document.getElementById('status-filter') && document.getElementById('status-filter').value) ? document.getElementById('status-filter').value : 'all';
+  const filteredByQuery = q ? budgets.filter(b => {
     const c = b.clientData || {};
     return (c.name || '').toLowerCase().includes(q)
       || (c.company || '').toLowerCase().includes(q)
       || (c.docId || '').toLowerCase().includes(q)
       || (c.whatsapp || '').toLowerCase().includes(q);
   }) : budgets;
+  const filtered = statusFilter === 'all' ? filteredByQuery : filteredByQuery.filter(b => (b.status || b.totals && b.totals.status || 'pendente') === statusFilter);
 
   const listEl = document.getElementById('list');
   if (filtered.length === 0) {
@@ -244,22 +252,30 @@ function renderList() {
     const t = b.totals || {};
     const address = [c.address, c.num, c.comp].filter(Boolean).join(', ');
     const totalValue = money(t.finalValue || t.final || 0);
-    return `
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <p class="card-title">${c.name || 'Sem nome'}${c.company ? ' — ' + c.company : ''}</p>
-            <p class="card-meta">Nº <strong>${c.docId || '—'}</strong> · ${c.date || ''}</p>
-            <p class="card-meta"><strong>Valor total:</strong> ${totalValue}</p>
-            <p class="card-meta"><strong>Endereço:</strong> ${address || 'Não informado'}</p>
+    const status = (b.status || (b.totals && b.totals.status) || 'pendente');
+      return `
+        <div class="card">
+          <div class="card-head">
+            <div style="display:flex;gap:12px;align-items:flex-start">
+              <div>
+                <p class="card-title">${c.name || 'Sem nome'}${c.company ? ' — ' + c.company : ''}</p>
+                <p class="card-meta">Nº <strong>${c.docId || '—'}</strong> · ${c.date || ''} · <strong>Status:</strong> ${status}</p>
+                <p class="card-meta"><strong>Valor total:</strong> ${totalValue}</p>
+                <p class="card-meta"><strong>Endereço:</strong> ${address || 'Não informado'}</p>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="card-actions">
-          <button class="btn btn-success" onclick="openBudgetFull('${c.docId || ''}')">👁️ Abrir (Completo)</button>
-          <button class="btn" style="background:#6b7280; color:#fff;" onclick="openBudgetMaterials('${c.docId || ''}')">📋 Lista de Materiais</button>
-          <button class="btn btn-danger" onclick="removeBudget('${c.docId || ''}')">🗑️ Excluir</button>
-        </div>
-      </div>`;
+          <div class="card-actions">
+            <button class="btn btn-success" onclick="openBudgetFull('${c.docId || ''}')">👁️ Abrir (Completo)</button>
+            <button class="btn" style="background:#6b7280; color:#fff;" onclick="openBudgetMaterials('${c.docId || ''}')">📋 Lista de Materiais</button>
+            <select onchange="changeStatusPrompt('${c.docId || ''}', this)" style="padding:8px;border-radius:6px;border:1px solid var(--border-color);background:#fff;color:#111">
+              <option value="pendente" ${status==='pendente' ? 'selected' : ''}>Pendente</option>
+              <option value="em andamento" ${status==='em andamento' ? 'selected' : ''}>Em andamento</option>
+              <option value="realizado" ${status==='realizado' ? 'selected' : ''}>Realizado</option>
+            </select>
+            <button class="btn btn-danger" onclick="removeBudget('${c.docId || ''}')">🗑️ Excluir</button>
+          </div>
+        </div>`;
   }).join('');
 }
 
@@ -268,6 +284,34 @@ function removeBudget(docId) {
   const budgets = getBudgets().filter(b => (b.clientData && b.clientData.docId) !== docId);
   saveBudgets(budgets);
   renderList();
+}
+
+function updateBudgetStatus(docId, newStatus) {
+  if (!docId) return;
+  const budgets = getBudgets();
+  const idx = budgets.findIndex(b => (b.clientData && b.clientData.docId) === docId);
+  if (idx === -1) return;
+  budgets[idx].status = newStatus;
+  // also keep legacy totals.status if present
+  if (!budgets[idx].totals) budgets[idx].totals = {};
+  budgets[idx].totals.status = newStatus;
+  saveBudgets(budgets);
+  renderList();
+}
+
+function changeStatusPrompt(docId, selectElem) {
+  if (!docId || !selectElem) return;
+  const newStatus = selectElem.value;
+  const confirmed = confirm(`Alterar o status do orçamento #${docId} para "${newStatus}"?`);
+  if (!confirmed) {
+    // re-set select to previous value
+    const budgets = getBudgets();
+    const idx = budgets.findIndex(b => (b.clientData && b.clientData.docId) === docId);
+    const current = idx > -1 ? (budgets[idx].status || (budgets[idx].totals && budgets[idx].totals.status) || 'pendente') : 'pendente';
+    selectElem.value = current;
+    return;
+  }
+  updateBudgetStatus(docId, newStatus);
 }
 
 renderList();

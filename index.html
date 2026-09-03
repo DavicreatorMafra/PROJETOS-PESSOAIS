@@ -810,8 +810,16 @@
                         <input type="text" id="travel-dest" placeholder="Ex: Av. Agamenon Magalhães, 100">
                     </div>
                     <div class="form-group">
-                        <label>KM (Ida e Volta)</label>
+                        <label>Modo</label>
+                        <select id="travel-mode" onchange="calculateTravel()">
+                            <option value="ida_volta">Ida e Volta</option>
+                            <option value="ida">Apenas Ida</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>KM</label>
                         <input type="number" id="travel-km" value="0" min="0" step="0.1" oninput="calculateTravel()">
+                        <small style="font-size:11px;color:#64748b">KM interpretado conforme o modo selecionado</small>
                     </div>
                     <div class="form-group">
                         <label>Valor por KM (R$)</label>
@@ -1507,8 +1515,11 @@
             return 0;
         }
         const km = parseFloat(document.getElementById('travel-km').value) || 0;
+        const mode = (document.getElementById('travel-mode') && document.getElementById('travel-mode').value) ? document.getElementById('travel-mode').value : 'ida_volta';
+        // `travel-km` input is interpreted according to `mode`: if 'ida', value is one-way; if 'ida_volta', value is round-trip
+        const effectiveKM = km || 0;
         const rate = parseFloat(document.getElementById('travel-rate').value) || 0;
-        const total = km * rate;
+        const total = effectiveKM * rate;
         document.getElementById('travel-total').innerText = formatCurrency(total);
         updateAllTotals();
         return total;
@@ -1554,9 +1565,15 @@
             if (routeData.routes && routeData.routes.length > 0) {
                 const oneWayKM = routeData.routes[0].distance / 1000;
                 const distanceKM = oneWayKM * 2;
-                document.getElementById('travel-km').value = distanceKM.toFixed(1);
+                const mode = (document.getElementById('travel-mode') && document.getElementById('travel-mode').value) ? document.getElementById('travel-mode').value : 'ida_volta';
+                // Ajusta campo `travel-km` conforme modo selecionado
+                if (mode === 'ida') {
+                    document.getElementById('travel-km').value = oneWayKM.toFixed(1);
+                } else {
+                    document.getElementById('travel-km').value = distanceKM.toFixed(1);
+                }
                 calculateTravel();
-                alert(`Rota calculada! Ida: ${oneWayKM.toFixed(1)} KM · Ida e Volta: ${distanceKM.toFixed(1)} KM.`);
+                alert(`Rota calculada! Ida: ${oneWayKM.toFixed(1)} KM · Ida e Volta: ${distanceKM.toFixed(1)} KM. Campo KM ajustado para o modo selecionado (${mode === 'ida' ? 'Ida' : 'Ida e Volta'}).`);
             } else {
                 alert('Não foi possível traçar uma rota terrestre entre os pontos!');
             }
@@ -2006,6 +2023,8 @@
                 obs: document.getElementById('obs').value,
                 finalValue
             }
+            ,
+            status: 'pendente'
         };
 
         document.querySelectorAll('#materials-table tbody tr').forEach(row => {
