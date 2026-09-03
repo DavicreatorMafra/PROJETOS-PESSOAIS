@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Personalização - Perfil Profissional</title>
+<style>
+:root{--primary:#0f172a;--border:#cbd5e1;--bg:#f8fafc}
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial}
+body{background:#f1f5f9;padding:18px;display:flex;justify-content:center}
+.container{width:100%;max-width:820px;background:#fff;border:1px solid var(--border);padding:18px;border-radius:10px}
+.section{margin-bottom:14px}
+.label{font-weight:700;font-size:13px;margin-bottom:6px;display:block}
+.input,textarea{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.checkbox-row{display:flex;gap:8px;align-items:center;margin-top:6px}
+.logo-preview{max-width:200px;max-height:80px;border:1px solid var(--border);display:block;margin-top:8px}
+.btn{background:var(--primary);color:#fff;padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+.small{font-size:13px;color:#475569}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2 style="margin-bottom:8px">Personalização do Perfil</h2>
+  <p class="small">Preencha os dados que deverão aparecer no cabeçalho dos orçamentos. Use as caixas para escolher o que será exibido.</p>
+
+  <div class="section">
+    <label class="label">Nome Pessoal</label>
+    <input id="pf-name" class="input" placeholder="Ex: João Silva">
+    <div class="checkbox-row"><input type="checkbox" id="show-name"> <label for="show-name" class="small">Exibir no cabeçalho</label></div>
+  </div>
+
+  <div class="section">
+    <label class="label">Nome Comercial</label>
+    <input id="pf-company" class="input" placeholder="Ex: DGI Soluções Elétricas">
+    <div class="checkbox-row"><input type="checkbox" id="show-company"> <label for="show-company" class="small">Exibir no cabeçalho</label></div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label class="label">CPF / CNPJ</label>
+      <input id="pf-doc" class="input" placeholder="000.000.000-00 ou 00.000.000/0000-00">
+      <div class="checkbox-row"><input type="checkbox" id="show-doc"> <label for="show-doc" class="small">Exibir no cabeçalho</label></div>
+    </div>
+    <div>
+      <label class="label">Endereço</label>
+      <input id="pf-address" class="input" placeholder="Rua, Nº, Bairro, Cidade - UF">
+      <div class="checkbox-row"><input type="checkbox" id="show-address"> <label for="show-address" class="small">Exibir no cabeçalho</label></div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:10px">
+    <div>
+      <label class="label">Telefone</label>
+      <input id="pf-phone" class="input" placeholder="(00) 00000-0000">
+      <div class="checkbox-row"><input type="checkbox" id="show-phone"> <label for="show-phone" class="small">Exibir no cabeçalho</label></div>
+    </div>
+    <div>
+      <label class="label">E-mail</label>
+      <input id="pf-email" class="input" placeholder="contato@empresa.com">
+      <div class="checkbox-row"><input type="checkbox" id="show-email"> <label for="show-email" class="small">Exibir no cabeçalho</label></div>
+    </div>
+  </div>
+
+  <div style="margin-top:10px">
+    <label class="label">Instagram</label>
+    <input id="pf-ig" class="input" placeholder="@perfil">
+    <div class="checkbox-row"><input type="checkbox" id="show-ig"> <label for="show-ig" class="small">Exibir no cabeçalho</label></div>
+  </div>
+
+  <div style="margin-top:12px">
+    <label class="label">Facebook</label>
+    <input id="pf-fb" class="input" placeholder="/pagina">
+    <div class="checkbox-row"><input type="checkbox" id="show-fb"> <label for="show-fb" class="small">Exibir no cabeçalho</label></div>
+  </div>
+
+  <div style="margin-top:12px">
+    <label class="label">Logo (PNG/JPEG)</label>
+    <input id="pf-logo" type="file" accept="image/*">
+    <img id="pf-logo-preview" class="logo-preview" alt="Pré-visualização da logo" src="" style="display:none">
+    <div id="pf-logo-size" class="small" style="margin-top:6px; display:none"></div>
+    <div class="checkbox-row"><input type="checkbox" id="show-logo" checked> <label for="show-logo" class="small">Exibir logo no cabeçalho</label></div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:16px">
+    <button class="btn" onclick="saveProfile()">Salvar</button>
+    <button class="btn" style="background:#64748b" onclick="resetProfile()">Redefinir</button>
+    <a href="index.html" class="btn" style="background:#10b981;text-decoration:none">Voltar</a>
+  </div>
+
+  <!-- Opções de documento removidas: validade agora é preenchida na página de Deslocamento -->
+
+  <p class="small" style="margin-top:12px">As informações são salvas localmente no seu navegador e serão usadas no cabeçalho dos PDFs gerados.</p>
+</div>
+
+<script>
+const KEY = 'profile_settings';
+
+function loadProfile() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || '{}');
+    document.getElementById('pf-name').value = s.name || '';
+    document.getElementById('pf-company').value = s.company || '';
+    document.getElementById('pf-doc').value = s.doc || '';
+    document.getElementById('pf-address').value = s.address || '';
+    document.getElementById('pf-phone').value = s.phone || '';
+    document.getElementById('pf-email').value = s.email || '';
+    document.getElementById('pf-ig').value = s.ig || '';
+    document.getElementById('pf-fb').value = s.fb || '';
+    document.getElementById('show-name').checked = !!s.showName;
+    document.getElementById('show-company').checked = !!s.showCompany;
+    document.getElementById('show-doc').checked = !!s.showDoc;
+    document.getElementById('show-address').checked = !!s.showAddress;
+    document.getElementById('show-phone').checked = !!s.showPhone;
+    document.getElementById('show-email').checked = !!s.showEmail;
+    document.getElementById('show-ig').checked = !!s.showIg;
+    document.getElementById('show-fb').checked = !!s.showFb;
+    document.getElementById('show-logo').checked = s.showLogo !== false;
+    if (s.logoBase64) {
+      const img = document.getElementById('pf-logo-preview');
+      img.src = s.logoBase64; img.style.display = 'block';
+      try { showLogoSize(s.logoBase64); } catch(e) {}
+    }
+    // removed document settings: validity/doc/date moved to main interface
+  } catch(e) { console.error(e); }
+}
+
+function estimateBase64Size(base64) {
+  if (!base64) return 0;
+  // remove data URI prefix
+  const parts = base64.split(',');
+  const b64 = parts.length > 1 ? parts[1] : parts[0];
+  const padding = (b64.endsWith('==') ? 2 : (b64.endsWith('=') ? 1 : 0));
+  const sizeInBytes = Math.ceil((b64.length * 3) / 4) - padding;
+  return sizeInBytes;
+}
+
+function humanFileSize(bytes) {
+  if (bytes === 0) return '0 B';
+  const thresh = 1024;
+  if (Math.abs(bytes) < thresh) return bytes + ' B';
+  const units = ['KB','MB','GB','TB'];
+  let u = -1; let b = bytes;
+  do { b /= thresh; ++u; } while (Math.abs(b) >= thresh && u < units.length-1);
+  return b.toFixed(1) + ' ' + units[u];
+}
+
+function showLogoSize(base64) {
+  const el = document.getElementById('pf-logo-size');
+  if (!el) return;
+  if (!base64) { el.style.display = 'none'; el.innerText = ''; return; }
+  const bytes = estimateBase64Size(base64);
+  const hr = humanFileSize(bytes);
+  el.style.display = 'block';
+  el.innerText = `Tamanho aproximado: ${hr}`;
+  if (bytes > 200 * 1024) {
+    el.innerText += ' — Aviso: arquivo grande (>' + (200) + ' KB) pode não caber no armazenamento local.';
+    el.style.color = '#b45309';
+  } else {
+    el.style.color = '#475569';
+  }
+}
+
+function saveProfile() {
+  try {
+    const logoFromStorage = localStorage.getItem('profile_logo_base64') || '';
+    const preview = document.getElementById('pf-logo-preview');
+    const logoBase64 = (preview && preview.src && preview.style.display !== 'none') ? preview.src : logoFromStorage;
+
+    const obj = {
+      name: (document.getElementById('pf-name') || {}).value?.trim() || '',
+      company: (document.getElementById('pf-company') || {}).value?.trim() || '',
+      doc: (document.getElementById('pf-doc') || {}).value?.trim() || '',
+      address: (document.getElementById('pf-address') || {}).value?.trim() || '',
+      phone: (document.getElementById('pf-phone') || {}).value?.trim() || '',
+      email: (document.getElementById('pf-email') || {}).value?.trim() || '',
+      ig: (document.getElementById('pf-ig') || {}).value?.trim() || '',
+      fb: (document.getElementById('pf-fb') || {}).value?.trim() || '',
+      showName: !!(document.getElementById('show-name') && document.getElementById('show-name').checked),
+      showCompany: !!(document.getElementById('show-company') && document.getElementById('show-company').checked),
+      showDoc: !!(document.getElementById('show-doc') && document.getElementById('show-doc').checked),
+      showAddress: !!(document.getElementById('show-address') && document.getElementById('show-address').checked),
+      showPhone: !!(document.getElementById('show-phone') && document.getElementById('show-phone').checked),
+      showEmail: !!(document.getElementById('show-email') && document.getElementById('show-email').checked),
+      showIg: !!(document.getElementById('show-ig') && document.getElementById('show-ig').checked),
+      showFb: !!(document.getElementById('show-fb') && document.getElementById('show-fb').checked),
+      showLogo: !!(document.getElementById('show-logo') && document.getElementById('show-logo').checked),
+      logoBase64: logoBase64 || ''
+    };
+
+    localStorage.setItem(KEY, JSON.stringify(obj));
+    // ensure logo storage is set as well
+    try {
+      if (logoBase64) localStorage.setItem('profile_logo_base64', logoBase64);
+      alert('Perfil salvo localmente.');
+    } catch (e) {
+      console.warn('Falha ao salvar logo inicialmente (talvez quota). Tentando liberar espaço removendo orçamentos antigos...', e);
+      try {
+        const res = cleanupBudgetsUntilFit(logoBase64);
+        if (res && res.success) {
+          alert(`Perfil salvo localmente. Logo armazenada após remoção de ${res.removed} orçamentos antigos.`);
+        } else {
+          // fallback: remove logo and persist profile without it
+          try {
+            localStorage.removeItem('profile_logo_base64');
+            obj.logoBase64 = '';
+            localStorage.setItem(KEY, JSON.stringify(obj));
+            alert('Perfil salvo localmente, porém a logo foi removida devido ao limite de armazenamento do navegador.');
+          } catch (err2) {
+            console.error('Erro ao salvar perfil após tentativa de remover logo:', err2);
+            alert('Falha ao salvar o perfil: espaço de armazenamento insuficiente. Remova itens do armazenamento local e tente novamente.');
+          }
+        }
+      } catch (cleanupErr) {
+        console.error('Erro durante limpeza automática:', cleanupErr);
+        try {
+          localStorage.removeItem('profile_logo_base64');
+          obj.logoBase64 = '';
+          localStorage.setItem(KEY, JSON.stringify(obj));
+          alert('Perfil salvo localmente sem a logo. Não foi possível liberar espaço automaticamente.');
+        } catch (err2) {
+          console.error('Erro ao salvar perfil após falha na limpeza automática:', err2);
+          alert('Falha ao salvar o perfil: espaço de armazenamento insuficiente. Remova itens do armazenamento local e tente novamente.');
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao salvar perfil:', err);
+    if (err && (err.name === 'QuotaExceededError' || err.code === 22)) {
+      // Try to free the largest known item (logo) and retry once
+      try {
+        localStorage.removeItem('profile_logo_base64');
+        const logoFromStorage = '';
+        const objRetry = Object.assign({}, {
+          name: (document.getElementById('pf-name') || {}).value?.trim() || '',
+          company: (document.getElementById('pf-company') || {}).value?.trim() || '',
+          doc: (document.getElementById('pf-doc') || {}).value?.trim() || '',
+          address: (document.getElementById('pf-address') || {}).value?.trim() || '',
+          phone: (document.getElementById('pf-phone') || {}).value?.trim() || '',
+          email: (document.getElementById('pf-email') || {}).value?.trim() || '',
+          ig: (document.getElementById('pf-ig') || {}).value?.trim() || '',
+          fb: (document.getElementById('pf-fb') || {}).value?.trim() || '',
+          showName: !!(document.getElementById('show-name') && document.getElementById('show-name').checked),
+          showCompany: !!(document.getElementById('show-company') && document.getElementById('show-company').checked),
+          showDoc: !!(document.getElementById('show-doc') && document.getElementById('show-doc').checked),
+          showAddress: !!(document.getElementById('show-address') && document.getElementById('show-address').checked),
+          showPhone: !!(document.getElementById('show-phone') && document.getElementById('show-phone').checked),
+          showEmail: !!(document.getElementById('show-email') && document.getElementById('show-email').checked),
+          showIg: !!(document.getElementById('show-ig') && document.getElementById('show-ig').checked),
+          showFb: !!(document.getElementById('show-fb') && document.getElementById('show-fb').checked),
+          showLogo: !!(document.getElementById('show-logo') && document.getElementById('show-logo').checked),
+          logoBase64: ''
+        });
+        localStorage.setItem(KEY, JSON.stringify(objRetry));
+        alert('Perfil salvo sem a logo (espaço insuficiente). Remova itens do armazenamento local para salvar a logo.');
+      } catch (err3) {
+        console.error('Falha ao recuperar espaço e salvar perfil:', err3);
+        alert('Falha ao salvar o perfil: espaço de armazenamento insuficiente. Remova itens do armazenamento local e tente novamente.');
+      }
+    } else {
+      alert('Falha ao salvar o perfil. Abra o console para detalhes.');
+    }
+  }
+}
+
+function resetProfile() {
+  if (!confirm('Redefinir perfil para valores padrão?')) return;
+  localStorage.removeItem(KEY);
+  localStorage.removeItem('profile_logo_base64');
+  loadProfile();
+}
+
+// Tenta liberar espaço removendo orçamentos antigos até a logo poder ser salva
+function cleanupBudgetsUntilFit(logoBase64) {
+  try {
+    let budgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
+    if (!budgets || budgets.length === 0) return { success: false, removed: 0 };
+    let removed = 0;
+
+    // remove orçamentos mais antigos (início do array) progressivamente
+    while (budgets.length > 0) {
+      try {
+        localStorage.setItem('profile_logo_base64', logoBase64);
+        return { success: true, removed };
+      } catch (e) {
+        budgets.shift();
+        removed++;
+        try { localStorage.setItem('local_budgets', JSON.stringify(budgets)); } catch (inner) { /* continue trying */ }
+      }
+    }
+
+    // última tentativa após limpar todos os orçamentos
+    try {
+      localStorage.setItem('profile_logo_base64', logoBase64);
+      return { success: true, removed };
+    } catch (e) {
+      return { success: false, removed };
+    }
+  } catch (err) {
+    console.error('Erro em cleanupBudgetsUntilFit:', err);
+    return { success: false, removed: 0 };
+  }
+}
+
+// Upload de logo e armazenamento em base64
+const logoInput = document.getElementById('pf-logo');
+
+function compressImageFile(file, maxWidth = 800, maxHeight = 200, quality = 0.75) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = function(e) {
+      const img = new Image();
+      img.onload = function() {
+        // Calculate target size preserving aspect ratio
+        let { width, height } = img;
+        const ratio = Math.min(maxWidth / width, maxHeight / height, 1);
+        const targetW = Math.round(width * ratio);
+        const targetH = Math.round(height * ratio);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = targetW;
+        canvas.height = targetH;
+        const ctx = canvas.getContext('2d');
+        // White background for PNG->JPEG conversion to avoid transparency issues
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, targetW, targetH);
+        try {
+          const compressed = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressed);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+logoInput.addEventListener('change', function(){
+  const file = this.files && this.files[0];
+  if (!file) return;
+  // Compress and store (reduzido para 600x200 @ 0.70 para economizar espaço)
+  compressImageFile(file, 600, 200, 0.70).then(base64 => {
+    try { localStorage.setItem('profile_logo_base64', base64); } catch(e) { /* handled on save */ }
+    const img = document.getElementById('pf-logo-preview');
+    img.src = base64; img.style.display = 'block';
+    try { showLogoSize(base64); } catch(e) {}
+  }).catch(err => {
+    console.error('Erro ao comprimir a imagem:', err);
+    // fallback: store original if possible
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try { localStorage.setItem('profile_logo_base64', e.target.result); } catch(e2) {}
+      const img = document.getElementById('pf-logo-preview');
+      img.src = e.target.result; img.style.display = 'block';
+      try { showLogoSize(e.target.result); } catch(e) {}
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+loadProfile();
+</script>
+</body>
+</html>

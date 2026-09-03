@@ -211,6 +211,14 @@ function openBudget(docId) {
   window.location.href = `index.html?view=${encodeURIComponent(docId)}`;
 }
 
+function openBudgetFull(docId) {
+  window.location.href = `index.html?view=${encodeURIComponent(docId)}&mode=full`;
+}
+
+function openBudgetMaterials(docId) {
+  window.location.href = `index.html?view=${encodeURIComponent(docId)}&mode=materials`;
+}
+
 function renderList() {
   const q = (document.getElementById('search').value || '').trim().toLowerCase();
   const budgets = getBudgets().slice().reverse();
@@ -247,7 +255,8 @@ function renderList() {
           </div>
         </div>
         <div class="card-actions">
-          <button class="btn btn-success" onclick="openBudget('${c.docId || ''}')">👁️ Abrir</button>
+          <button class="btn btn-success" onclick="openBudgetFull('${c.docId || ''}')">👁️ Abrir (Completo)</button>
+          <button class="btn" style="background:#6b7280; color:#fff;" onclick="openBudgetMaterials('${c.docId || ''}')">📋 Lista de Materiais</button>
           <button class="btn btn-danger" onclick="removeBudget('${c.docId || ''}')">🗑️ Excluir</button>
         </div>
       </div>`;

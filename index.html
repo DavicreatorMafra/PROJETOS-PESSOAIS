@@ -119,7 +119,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            border-bottom: 3px solid var(--primary-color);
+            border-bottom: none;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
@@ -424,23 +424,25 @@
             background: #fff;
             color: #000;
             padding: 12mm;
-            border: 1px solid #000;
+            border: none;
             margin: 15px auto 0 auto;
             font-size: 12px;
             line-height: 1.4;
             width: 100%;
             max-width: 210mm;
-            min-height: 297mm;
+            min-height: auto;
+            overflow: visible;
             box-sizing: border-box;
-            overflow: hidden;
         }
 
         .pdf-header {
             display: flex;
             justify-content: space-between;
-            border-bottom: 2px solid #000;
+            align-items: center;
+            border-bottom: none;
             padding-bottom: 10px;
             margin-bottom: 15px;
+            gap: 12px;
         }
 
         .pdf-grid {
@@ -490,7 +492,7 @@
         .pdf-totals {
             margin-left: auto;
             width: 300px;
-            border: 1px solid #000;
+            border: none;
             margin-top: 15px;
         }
 
@@ -562,6 +564,7 @@
             body {
                 background: white;
                 padding: 0;
+                margin: 0;
             }
             .container {
                 box-shadow: none;
@@ -575,15 +578,42 @@
             .page {
                 display: none !important;
             }
+            /* Mostrar apenas a página de visualização (page-4) e o preview do PDF */
             #page-4 {
                 display: block !important;
             }
-            .pdf-preview {
-                border: none;
-                padding: 0;
-            }
+            /* Garantir que o preview seja exibido exatamente como na tela */
+            .pdf-preview { display: block !important; }
+            /* Manter todos os parágrafos do cabeçalho do PDF visíveis — igual à visualização */
+            .pdf-header > div:nth-child(2) p { display: block !important; }
+            /* Ocultar elementos de UI que não fazem parte da visualização do PDF */
+            .header-title, .welcome-screen, .menu-buttons, .navigation-actions { display: none !important; }
+            /* Não sobrescrever o padding/borda do .pdf-preview — preserva aparência da tela */
+            /* Ajustes para legibilidade em impressão, mantendo estilos principais */
+            .pdf-preview, #pdf-export-wrapper { font-size: 12px; line-height: 1.25; color: #000; }
+            .pdf-table th, .pdf-table td { font-size: 12px; }
+            img { max-width: 100%; height: auto; }
         }
+        /* Forçar tamanho A4 e regras de quebra de página para exportação/PDF */
+        @page { size: A4; margin: 8mm; }
+        #pdf-export-wrapper, .pdf-preview {
+            width: 210mm;
+            max-width: 210mm;
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        /* Permitir quebras automáticas entre páginas, evitar quebra dentro de linhas/entradas */
+        .pdf-print-scope { page-break-inside: avoid; }
+        .pdf-section-title { page-break-after: avoid; page-break-inside: avoid; }
+        .pdf-table { width: 100%; border-collapse: collapse; page-break-inside: auto; }
+        .pdf-table tbody tr { page-break-inside: avoid; page-break-after: auto; }
+        .pdf-financial-block { page-break-inside: avoid; }
     </style>
+    
+    <script>
+        /* Impressão nativa via `window.print()` utilizada pelo botão — sem fallbacks adicionais */
+    </script>
 </head>
 <body>
 
@@ -591,8 +621,8 @@
     
     <div class="page active" id="page-welcome">
         <div class="welcome-screen">
-            <div class="welcome-title"> DGI Soluções Elétricas</div>
-            <div class="welcome-subtitle">Painel de Orçamentos</div>
+            <div class="welcome-title"> Orçamento Soluções Elétricas</div>
+            <div class="welcome-subtitle">Painel Principal</div>
             
             <div class="menu-buttons">
                 <div class="menu-card" onclick="startNewBudget()">
@@ -602,6 +632,11 @@
                 <div class="menu-card" onclick="goToSavedBudgets()">
                     <span class="menu-icon">📂</span>
                     <h3>Orçamentos Salvos</h3>                
+                </div>
+                <div class="menu-card" onclick="window.location.href='personalizacao.html'">
+                    <span class="menu-icon">⚙️</span>
+                    <h3>Personalizar</h3>
+                    <p>Configurar cabeçalho, contatos e logo</p>
                 </div>
             </div>
         </div>
@@ -616,17 +651,11 @@
                     <button class="btn btn-secondary no-print" onclick="backToMainMenu()" style="padding: 6px 12px; font-size: 13px;">🏠 Menu Principal</button>
                 </div>
             </div>
-            <div class="header-right">
-                <p><strong>Nº Doc:</strong> <span id="doc-id">--</span></p>
-                <p><strong>Data:</strong> <span id="current-date">--/--/----</span></p>
-                <p style="margin-top: 4px;">
-                    <strong>Validade:</strong>
-                    <span class="validity-wrapper" title="Toque para alterar os dias de validade">
-                        <input type="number" id="validity-days" value="10" min="1" max="365" step="1" placeholder="10">
-                        <span style="font-weight: bold; font-size: 16px;">dias</span>
-                    </span>
-                    <input type="hidden" id="validity" value="10 dias">
-                </p>
+            <!-- Header right: removido visualmente (configurado via Personalização) -->
+            <div class="header-right" style="display:none;">
+                <p style="display:none"><strong>Nº Doc:</strong> <span id="doc-id">--</span></p>
+                <p style="display:none"><strong>Data:</strong> <span id="current-date">--/--/----</span></p>
+                <input type="hidden" id="validity" value="10 dias">
             </div>
         </div>
 
@@ -706,11 +735,9 @@
                 <table id="materials-table">
                     <thead>
                         <tr>
-                            <th style="width: 40%;">Material</th>
-                            <th style="width: 20%;">Marca</th>
-                            <th style="width: 15%;">Valor Und</th>
+                            <th style="width: 55%;">Material / Descrição</th>
+                            <th style="width: 25%;">Marca</th>
                             <th style="width: 10%;">Qtd</th>
-                            <th style="width: 15%;">Valor Total</th>
                             <th class="no-print" style="width: 5%;"></th>
                         </tr>
                     </thead>
@@ -718,9 +745,7 @@
                         <tr>
                             <td><input type="text" class="mat-name" placeholder="Ex: Disjuntor 20A" style="width:100%;"></td>
                             <td><input type="text" class="mat-brand" placeholder="Ex: Nema" style="width:100%;"></td>
-                            <td><input type="number" class="mat-price" value="0.00" min="0" step="5" style="width:100%; text-align:right;" oninput="calculateMaterialRow(this)" onfocus="clearIfZero(this)"></td>
-                            <td><input type="number" class="mat-qty" value="0" min="0" step="1" style="width:100%; text-align:center;" oninput="calculateMaterialRow(this)" onfocus="clearIfZero(this)"></td>
-                            <td class="mat-total td-total">R$ 0,00</td>
+                            <td><input type="number" class="mat-qty" value="0" min="0" step="1" style="width:100%; text-align:center;" oninput="updateAllTotals()" onfocus="clearIfZero(this)"></td>
                             <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'materials')">X</button></td>
                         </tr>
                     </tbody>
@@ -771,7 +796,7 @@
             
             <div class="form-group-row">
                 <input type="checkbox" id="travel-active" checked onchange="toggleTravelActive()">
-                <label for="travel-active" style="font-size: 15px; cursor: pointer;">INCLUIR DESLOCAMENTO NO ORÇAMENTO FINAL</label>
+                <label for="travel-active" style="font-size: 15px; cursor: pointer;">INCLUIR DESLOCAMENTO NO DOCUMENTO FINAL</label>
             </div>
 
             <div id="travel-inputs-container">
@@ -803,6 +828,13 @@
                 </div>
             </div>
             
+            <!-- Campo de validade inserido imediatamente após Deslocamento -->
+            <div class="section-title">Validade da Proposta</div>
+            <div class="form-group" style="margin-bottom:12px;">
+                <label>Dias</label>
+                <input type="number" id="validity-days" value="15" min="1" max="365" step="1" oninput="(function(){ const v=parseInt(this.value,10); const days=isNaN(v)?15:v; document.getElementById('validity').value = days + ' dias'; }).call(this)">
+            </div>
+
             <div class="section-title">Descontos e Observações Gerais</div>
             <div class="grid-3" style="align-items: center;">
                 <div class="form-group">
@@ -821,13 +853,15 @@
                 ⚠️ <strong>Modo de Visualização do PDF:</strong> O bloco abaixo renderiza exatamente como o seu orçamento ficará impresso ou gerado no celular.
             </div>
 
+
+
             <div class="pdf-preview" id="pdf-content">
                 <div class="pdf-header">
-                    <div>
-                        <h2 style="text-transform: uppercase; font-size: 18px; font-weight: 800;">DGI Soluções Elétricas</h2>
-                        <p style="font-size: 10px; color: #555;">Serviços Elétricos Residenciais</p>
+                    <div style="flex: 0 0 auto; display:flex; align-items:center; gap:12px;"> <!-- left: logo + company/name -->
+                        <div id="pdf-left-header"></div>
                     </div>
-                    <div style="text-align: right; font-size: 11px;">
+                    <div style="flex: 1 1 auto; text-align: center; font-size: 14px;"></div>
+                    <div style="flex: 0 0 auto; text-align: right; font-size: 11px;"> <!-- right: nº, date and validity (restored to padrão) -->
                         <p><strong>Nº Orçamento:</strong> #<span id="pdf-doc-id">--</span></p>
                         <p><strong>Data de Emissão:</strong> <span id="pdf-current-date">--</span></p>
                         <p><strong>Validade da Proposta:</strong> <span id="pdf-validity">--</span></p>
@@ -850,23 +884,21 @@
                     </div>
                 </div>
 
-                <div id="pdf-materials-section">
+                <div id="pdf-materials-section" class="pdf-print-scope">
                     <div class="pdf-section-title">Materiais Aplicados</div>
-                    <table class="pdf-table" id="pdf-materials-table">
-                        <thead>
-                            <tr>
-                                <th style="text-align: left; width: 45%;">Descrição do Material</th>
-                                <th style="width: 20%;">Marca</th>
-                                <th style="text-align: right; width: 15%;">Unitário</th>
-                                <th style="text-align: center; width: 10%;">Qtd</th>
-                                <th style="text-align: right; width: 15%;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                                    <table class="pdf-table" id="pdf-materials-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align: left; width: 65%;">Descrição do Material</th>
+                                            <th style="width: 20%;">Marca</th>
+                                            <th style="text-align: center; width: 15%;">Qtd</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
                 </div>
 
-                <div id="pdf-labor-section">
+                <div id="pdf-labor-section" class="pdf-print-scope">
                     <div class="pdf-section-title">Serviços e Mão de Obra</div>
                     <table class="pdf-table" id="pdf-labor-table">
                         <thead>
@@ -882,7 +914,7 @@
                     </table>
                 </div>
 
-                <div id="pdf-travel-section">
+                <div id="pdf-travel-section" class="pdf-print-scope">
                     <div class="pdf-section-title">Deslocamento Operacional</div>
                     <table class="pdf-table">
                         <thead>
@@ -904,7 +936,7 @@
                     </table>
                 </div>
 
-                <div class="pdf-financial-block">
+                <div class="pdf-financial-block pdf-print-scope">
                     <div class="pdf-grid" style="margin-top: 15px;">
                         <div>
                             <p style="font-weight: bold; text-transform: uppercase; font-size: 10px; margin-bottom: 5px;">Observações / Condições Gerais:</p>
@@ -912,7 +944,7 @@
                         </div>
                         <div>
                             <div class="pdf-totals">
-                                <div class="pdf-totals-row">
+                                <div class="pdf-totals-row" id="pdf-row-materials" style="display:none;">
                                     <span>Total em Materiais:</span>
                                     <span id="pdf-total-materials">R$ 0,00</span>
                                 </div>
@@ -1003,11 +1035,16 @@
         final: 0
     };
 
+    // Config: habilitar envio ao servidor. Se false, salva apenas localmente.
+    const SERVER_SAVE_ENABLED = false;
+
     document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR');
 
     const urlParams = new URLSearchParams(window.location.search);
     const viewDocId = urlParams.get('view');
     const shouldEdit = urlParams.get('edit') === '1';
+    // modo de visualização: 'full' (padrão) ou 'materials' (lista sem valores)
+    let viewMode = urlParams.get('mode') || 'full';
 
     if (viewDocId) {
         const savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
@@ -1197,7 +1234,17 @@
         clearAllFormData();
         document.getElementById('page-welcome').style.display = 'none';
         document.getElementById('main-interface').style.display = 'block';
+        // Preencher Nº do documento
         document.getElementById('doc-id').innerText = generateNextDocId();
+        // Preencher data atual
+        const today = new Date().toLocaleDateString('pt-BR');
+        const currentDateEl = document.getElementById('current-date');
+        if (currentDateEl) currentDateEl.innerText = today;
+        // Preencher validade a partir do perfil (ou padrão 10 dias)
+        // Preencher validade padrão 15 dias quando iniciar novo orçamento
+        try {
+            document.getElementById('validity').value = '15 dias';
+        } catch (e) { /* ignore */ }
         navigateToStep(1);
     }
 
@@ -1320,7 +1367,10 @@
             if (!isEditing && hasBeenSavedBefore) {
                 btnPrint.style.display = 'inline-block';
                 btnShare.style.display = 'inline-block';
-                btnEdit.style.display = 'inline-block';
+                // Não permitir editar quando estiver visualizando apenas a Lista de Materiais
+                if (viewMode !== 'materials') {
+                    btnEdit.style.display = 'inline-block';
+                }
             }
             // Mapa somente quando houver orçamento salvo e deslocamento ativo, e não estiver em modo edição
             const travelActive = document.getElementById('travel-active').checked;
@@ -1373,28 +1423,21 @@
     }
 
     // --- MANIPULAÇÃO DE LINHAS (MATERIAIS E MÃO DE OBRA) ---
-    function addMaterialRow(data = { name: '', brand: '', price: 0, qty: 0 }) {
+    function addMaterialRow(data = { name: '', brand: '', qty: 0 }) {
         const tbody = document.querySelector('#materials-table tbody');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><input type="text" class="mat-name" value="${data.name}" placeholder="Nome do material" style="width:100%;"></td>
-            <td><input type="text" class="mat-brand" value="${data.brand}" placeholder="Marca" style="width:100%;"></td>
-            <td><input type="number" class="mat-price" value="${data.price.toFixed(2)}" min="0" step="5" style="width:100%; text-align:right;" oninput="calculateMaterialRow(this)" onfocus="clearIfZero(this)"></td>
-            <td><input type="number" class="mat-qty" value="${data.qty}" min="0" step="1" style="width:100%; text-align:center;" oninput="calculateMaterialRow(this)" onfocus="clearIfZero(this)"></td>
-            <td class="mat-total td-total">R$ 0,00</td>
+            <td><input type="text" class="mat-name" value="${data.name || ''}" placeholder="Nome do material" style="width:100%;"></td>
+            <td><input type="text" class="mat-brand" value="${data.brand || ''}" placeholder="Marca" style="width:100%;"></td>
+            <td><input type="number" class="mat-qty" value="${data.qty || 0}" min="0" step="1" style="width:100%; text-align:center;" oninput="updateAllTotals()" onfocus="clearIfZero(this)"></td>
             <td class="no-print" style="text-align: center;"><button class="btn btn-danger" onclick="deleteRow(this, 'materials')">X</button></td>
         `;
         tbody.appendChild(tr);
-        try { calculateMaterialRow(tr.querySelector('.mat-price')); } catch (e) {}
+        try { updateAllTotals(); } catch (e) {}
     }
 
     function calculateMaterialRow(input) {
-        if (!input) return;
-        const row = input.closest('tr');
-        const price = parseFloat(row.querySelector('.mat-price').value) || 0;
-        const qty = parseFloat(row.querySelector('.mat-qty').value) || 0;
-        const total = price * qty;
-        row.querySelector('.mat-total').innerText = formatCurrency(total);
+        // Materiais não possuem mais valores unitários — atualizar apenas totais gerais
         updateAllTotals();
     }
 
@@ -1532,8 +1575,8 @@
         const ids = ['client-name','client-company','client-document','client-address','client-num',
                      'client-cep','client-comp','client-whatsapp','client-phone','obs'];
         ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        const validity = document.getElementById('validity'); if (validity) validity.value = '10 dias';
-        const validityInput = document.getElementById('validity-days-input'); if (validityInput) validityInput.value = 10;
+        const validity = document.getElementById('validity'); if (validity) validity.value = '15 dias';
+        const validityInput = document.getElementById('validity-days'); if (validityInput) validityInput.value = 15;
         const discount = document.getElementById('discount-percent'); if (discount) discount.value = 0;
         const travelKm = document.getElementById('travel-km'); if (travelKm) travelKm.value = 0;
         const travelRate = document.getElementById('travel-rate'); if (travelRate) travelRate.value = 1.25;
@@ -1551,12 +1594,8 @@
 
     // --- CÁLCULOS MATEMÁTICOS FINANCEIROS ---
     function updateAllTotals() {
+        // Materiais são apenas informativos e não entram no cálculo financeiro
         let totalMaterials = 0;
-        document.querySelectorAll('#materials-table tbody tr').forEach(row => {
-            const price = parseFloat(row.querySelector('.mat-price').value) || 0;
-            const qty = parseFloat(row.querySelector('.mat-qty').value) || 0;
-            totalMaterials += price * qty;
-        });
 
         let totalLabor = 0;
         document.querySelectorAll('#labor-table tbody tr').forEach(row => {
@@ -1570,7 +1609,8 @@
             totalTravel = (parseFloat(document.getElementById('travel-km').value) || 0) * (parseFloat(document.getElementById('travel-rate').value) || 0);
         }
 
-        const subtotalForDiscount = totalMaterials + totalLabor;
+        // Desconto aplicado apenas sobre mão de obra
+        const subtotalForDiscount = totalLabor;
         const discountPercent = parseFloat(document.getElementById('discount-percent').value) || 0;
         const discountAmount = subtotalForDiscount * (discountPercent / 100);
         const discountedSubtotal = Math.max(0, subtotalForDiscount - discountAmount);
@@ -1591,12 +1631,84 @@
     function buildPDFContent() {
         updateAllTotals();
 
-        // 1. Informações de Cabeçalho e Metadados
-        document.getElementById('pdf-doc-id').innerText = document.getElementById('doc-id').innerText;
-        document.getElementById('pdf-current-date').innerText = document.getElementById('current-date').innerText;
-        document.getElementById('pdf-validity').innerText = document.getElementById('validity').value || 'Não informado';
+        // 1. Informações de Cabeçalho e Metadados (respeitando preferências de personalização)
+        // Exibir sempre Nº Doc, Data e Validade (controle removido de personalização)
+        document.getElementById('pdf-doc-id').innerText = document.getElementById('doc-id').innerText || '--';
+        document.getElementById('pdf-current-date').innerText = document.getElementById('current-date').innerText || new Date().toLocaleDateString('pt-BR');
+        document.getElementById('pdf-validity').innerText = document.getElementById('validity').value || '15 dias';
+        // Garantir visibilidade dos parágrafos do cabeçalho (coluna direita)
+        const pdfHeaderRight = document.querySelector('#pdf-content .pdf-header > div:nth-child(3)');
+        if (pdfHeaderRight) pdfHeaderRight.querySelectorAll('p').forEach(p => p.style.display = 'block');
+
+        // Ajustes conforme modo de visualização
+        try {
+            const headerTitleEl = document.querySelector('#pdf-content h2');
+            const financialBlock = document.querySelector('.pdf-financial-block');
+            const laborSection = document.getElementById('pdf-labor-section');
+            const travelSection = document.getElementById('pdf-travel-section');
+
+            const rightHeader = document.querySelector('.pdf-header > div:nth-child(3)');
+            if (viewMode === 'materials') {
+                // ocultar bloco financeiro (totais, desconto, valor final) e seção de mão de obra/serviços
+                if (financialBlock) financialBlock.style.display = 'none';
+                if (laborSection) laborSection.style.display = 'none';
+                if (travelSection) travelSection.style.display = 'none';
+                // Ajustar rótulos do cabeçalho da coluna direita para "Lista de Materiais"
+                if (rightHeader) {
+                    const currentId = document.getElementById('pdf-doc-id') ? document.getElementById('pdf-doc-id').innerText : '--';
+                    rightHeader.innerHTML = `<p><strong>Nº Lista de Materiais:</strong> #<span id="pdf-doc-id">${currentId || '--'}</span></p>` +
+                                            `<p><strong>Data de Emissão:</strong> <span id="pdf-current-date">${document.getElementById('current-date').innerText || new Date().toLocaleDateString('pt-BR')}</span></p>` +
+                                            `<p><strong>Validade da Proposta:</strong> <span id="pdf-validity">${document.getElementById('validity').value || '15 dias'}</span></p>`;
+                }
+            } else {
+                if (financialBlock) financialBlock.style.display = 'block';
+                if (laborSection) laborSection.style.display = 'block';
+                if (travelSection) travelSection.style.display = document.getElementById('travel-active').checked ? 'block' : 'none';
+                // Restaurar textos padrão na coluna direita
+                if (rightHeader) {
+                    const currentId = document.getElementById('pdf-doc-id') ? document.getElementById('pdf-doc-id').innerText : '--';
+                    rightHeader.innerHTML = `<p><strong>Nº Orçamento:</strong> #<span id="pdf-doc-id">${currentId || '--'}</span></p>` +
+                                            `<p><strong>Data de Emissão:</strong> <span id="pdf-current-date">${document.getElementById('current-date').innerText || new Date().toLocaleDateString('pt-BR')}</span></p>` +
+                                            `<p><strong>Validade da Proposta:</strong> <span id="pdf-validity">${document.getElementById('validity').value || '15 dias'}</span></p>`;
+                }
+            }
+        } catch (e) { /* continue sem travar */ }
 
         // 2. Dados do Cliente
+        // Aplicar perfil profissional salvo (logo + texto) no cabeçalho do PDF
+        try {
+            const profile = JSON.parse(localStorage.getItem('profile_settings') || '{}');
+            const logo = localStorage.getItem('profile_logo_base64');
+            const leftHeader = document.getElementById('pdf-left-header');
+            if (leftHeader) {
+                let html = '';
+                const infoLines = [];
+                if (profile.showDoc && profile.doc) infoLines.push(`<div style="font-size:11px;color:#555">${profile.doc}</div>`);
+                if (profile.showAddress && profile.address) infoLines.push(`<div style="font-size:11px;color:#555">${profile.address}</div>`);
+                if (profile.showPhone && profile.phone) infoLines.push(`<div style="font-size:12px;color:#333;display:inline-flex;align-items:center;gap:4px"><strong style="min-width:64px;display:inline-block;color:#222;font-size:11px">WhatsApp:</strong><span>${profile.phone}</span></div>`);
+                if (profile.showEmail && profile.email) infoLines.push(`<div style="font-size:12px;color:#333;display:inline-flex;align-items:center;gap:4px"><strong style="min-width:64px;display:inline-block;color:#222;font-size:11px">Email:</strong><span>${profile.email}</span></div>`);
+                if (profile.showIg && profile.ig) infoLines.push(`<div style="font-size:12px;color:#333;display:inline-flex;align-items:center;gap:4px"><strong style="min-width:64px;display:inline-block;color:#222;font-size:11px">Instagram:</strong><span>${profile.ig}</span></div>`);
+                if (profile.showFb && profile.fb) infoLines.push(`<div style="font-size:12px;color:#333;display:inline-flex;align-items:center;gap:4px"><strong style="min-width:64px;display:inline-block;color:#222;font-size:11px">Facebook:</strong><span>${profile.fb}</span></div>`);
+
+                // Se houver logo e for permitido, renderizar logo à esquerda e texto à direita
+                if (profile.showLogo && logo) {
+                    html += `<div style="display:flex;align-items:center;gap:12px">`;
+                    html += `<img src="${logo}" style="max-height:120px;max-width:300px;object-fit:contain" alt="Logo">`;
+                    html += `<div style="display:flex;flex-direction:column;justify-content:center;margin-left:8px">`;
+                    if (profile.showCompany && profile.company) html += `<h2 style="text-transform: uppercase; font-size: 18px; font-weight: 800; margin:0">${profile.company}</h2>`;
+                    if (profile.showName && profile.name) html += `<p style="font-size: 11px; color: #555; margin:6px 0 0 0">${profile.name}</p>`;
+                    if (infoLines.length) html += `<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px">${infoLines.join('')}</div>`;
+                    html += `</div></div>`;
+                } else {
+                    // Sem logo, apenas texto
+                    if (profile.showCompany && profile.company) html += `<h2 style="text-transform: uppercase; font-size: 18px; font-weight: 800; margin:0">${profile.company}</h2>`;
+                    if (profile.showName && profile.name) html += `<p style="font-size: 11px; color: #555; margin:6px 0 0 0">${profile.name}</p>`;
+                    if (infoLines.length) html += `<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px">${infoLines.join('')}</div>`;
+                }
+
+                leftHeader.innerHTML = html || leftHeader.innerHTML;
+            }
+        } catch (e) { /* ignore */ }
         document.getElementById('pdf-client-name').innerText = document.getElementById('client-name').value || '--';
         document.getElementById('pdf-client-company').innerText = document.getElementById('client-company').value || '--';
         document.getElementById('pdf-client-document').innerText = document.getElementById('client-document').value || '--';
@@ -1616,7 +1728,6 @@
         document.querySelectorAll('#materials-table tbody tr').forEach(row => {
             const name = row.querySelector('.mat-name').value;
             const brand = row.querySelector('.mat-brand').value;
-            const price = parseFloat(row.querySelector('.mat-price').value) || 0;
             const qty = parseFloat(row.querySelector('.mat-qty').value) || 0;
 
             if (name.trim() !== "" && qty > 0) {
@@ -1625,9 +1736,7 @@
                 tr.innerHTML = `
                     <td>${name}</td>
                     <td>${brand || '--'}</td>
-                    <td style="text-align: right;">${formatCurrency(price)}</td>
                     <td style="text-align: center;">${qty}</td>
-                    <td style="text-align: right; font-weight: bold;">${formatCurrency(price * qty)}</td>
                 `;
                 materialsTbody.appendChild(tr);
             }
@@ -1679,6 +1788,16 @@
             document.getElementById('pdf-row-travel-total').style.display = 'none';
         }
 
+        // Forçar ocultação de blocos não desejados quando em modo 'materials'
+        if (viewMode === 'materials') {
+            try {
+                const laborSec = document.getElementById('pdf-labor-section'); if (laborSec) laborSec.style.display = 'none';
+                const travelSec = document.getElementById('pdf-travel-section'); if (travelSec) travelSec.style.display = 'none';
+                const finBlock = document.querySelector('.pdf-financial-block'); if (finBlock) finBlock.style.display = 'none';
+                const totalsRow = document.getElementById('pdf-row-travel-total'); if (totalsRow) totalsRow.style.display = 'none';
+            } catch(e) {}
+        }
+
         // 6. Condições e Termos
         document.getElementById('pdf-obs').innerText = document.getElementById('obs').value || 'Nenhuma observação cadastrada.';
 
@@ -1696,25 +1815,42 @@
         const source = document.getElementById('pdf-content');
         const exportWrapper = document.createElement('div');
         exportWrapper.id = 'pdf-export-wrapper';
+        // Must be visible to html2canvas. Keep it visually unobtrusive via opacity and pointer-events.
         exportWrapper.style.position = 'fixed';
-        exportWrapper.style.left = '-9999px';
+        exportWrapper.style.left = '0';
         exportWrapper.style.top = '0';
         exportWrapper.style.width = '210mm';
-        exportWrapper.style.minHeight = '297mm';
+        exportWrapper.style.minHeight = 'auto';
         exportWrapper.style.padding = '0';
         exportWrapper.style.boxSizing = 'border-box';
         exportWrapper.style.background = '#fff';
         exportWrapper.style.color = '#000';
         exportWrapper.style.fontFamily = 'Arial, sans-serif';
-        exportWrapper.style.zIndex = '-1';
-        exportWrapper.appendChild(source.cloneNode(true));
+        exportWrapper.style.zIndex = '9999';
+        exportWrapper.style.opacity = '0';
+        exportWrapper.style.pointerEvents = 'none';
+        exportWrapper.style.visibility = 'visible';
+        // Para modo 'materials', clona apenas o cabeçalho e a seção de materiais
+        if (typeof viewMode !== 'undefined' && viewMode === 'materials') {
+            const clone = document.createElement('div');
+            const header = source.querySelector('.pdf-header');
+            const materials = source.querySelector('#pdf-materials-section');
+            if (header) clone.appendChild(header.cloneNode(true));
+            if (materials) clone.appendChild(materials.cloneNode(true));
+            exportWrapper.appendChild(clone);
+        } else {
+            exportWrapper.appendChild(source.cloneNode(true));
+        }
         document.body.appendChild(exportWrapper);
 
+        // Ensure styles that might overflow are normalized for capture
         requestAnimationFrame(() => {
             exportWrapper.querySelectorAll('*').forEach(el => {
                 el.style.maxWidth = '100%';
                 el.style.wordBreak = 'break-word';
             });
+            // Scroll into view to help some browsers render the element correctly
+            try { exportWrapper.scrollIntoView({ block: 'start' }); } catch(e) {}
         });
 
         return exportWrapper;
@@ -1727,28 +1863,69 @@
             filename,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
-                scale: 2,
+                scale: 2.5,
                 scrollX: 0,
                 scrollY: 0,
                 logging: false,
                 useCORS: true
             },
-            pagebreak: { mode: ['avoid-all', 'css'] },
+            pagebreak: { mode: ['css', 'legacy'] },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        await new Promise(resolve => setTimeout(resolve, 120));
+        // hide page scrollbars to avoid capture artifacts
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        // Make wrapper visible to html2canvas just for capture
+        const originalOpacity = exportElement.style.opacity;
+        const originalPointer = exportElement.style.pointerEvents;
+        exportElement.style.opacity = '1';
+        exportElement.style.pointerEvents = 'none';
+        exportElement.style.display = 'block';
+
+        // Wait for fonts and images to load to avoid blank pages
+        async function waitForResources(root, timeout = 5000) {
+            // wait fonts
+            try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e) {}
+
+            // wait images inside the root
+            const imgs = Array.from(root.querySelectorAll('img'));
+            await Promise.all(imgs.map(img => {
+                return new Promise(resolve => {
+                    if (img.complete && img.naturalWidth !== 0) return resolve();
+                    const onLoad = () => { cleanup(); resolve(); };
+                    const onError = () => { cleanup(); resolve(); };
+                    function cleanup() { img.removeEventListener('load', onLoad); img.removeEventListener('error', onError); }
+                    img.addEventListener('load', onLoad);
+                    img.addEventListener('error', onError);
+                    // safety timeout
+                    setTimeout(() => { cleanup(); resolve(); }, timeout);
+                });
+            }));
+        }
+
+        // Wait briefly and for resources
+        await new Promise(resolve => setTimeout(resolve, 150));
+        await waitForResources(exportElement, 4000);
 
         try {
             if (saveToDisk) {
                 await html2pdf().set(opt).from(exportElement).save();
                 return null;
             }
-            return await html2pdf().set(opt).from(exportElement).outputPdf('blob');
+            const blob = await html2pdf().set(opt).from(exportElement).outputPdf('blob');
+            return blob;
         } finally {
+            // Restore
+            exportElement.style.opacity = originalOpacity;
+            exportElement.style.pointerEvents = originalPointer;
+            document.body.style.overflow = originalOverflow;
             exportElement.remove();
         }
     }
+
+    
 
     async function sendPDFToWhatsapp() {
         const clientPhone = document.getElementById('client-whatsapp').value.replace(/\D/g, '');
@@ -1788,11 +1965,18 @@
 
     // --- CONTROLE DE LOCAL STORAGE ---
     async function saveBudgetToLocalStorage() {
-        const docId = document.getElementById('doc-id').innerText;
+        let docId = document.getElementById('doc-id').innerText;
+        // Garante que exista um ID válido antes de salvar
+        if (!docId || docId === '--') {
+            docId = generateNextDocId();
+            document.getElementById('doc-id').innerText = docId;
+        }
         const date = document.getElementById('current-date').innerText;
         const name = document.getElementById('client-name').value;
         const whatsapp = document.getElementById('client-whatsapp').value;
         const finalValue = formatCurrency(cachedTotals.final);
+
+        let savedToServer = false;
 
         const budget = {
             clientData: {
@@ -1828,7 +2012,7 @@
             budget.materials.push({
                 name: row.querySelector('.mat-name').value,
                 brand: row.querySelector('.mat-brand').value,
-                price: parseFloat(row.querySelector('.mat-price').value) || 0,
+                price: 0,
                 qty: parseFloat(row.querySelector('.mat-qty').value) || 0
             });
         });
@@ -1846,23 +2030,39 @@
             });
         });
 
-        try {
-            const response = await fetch('/api/budgets', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(budget)
-            });
-            if (!response.ok) throw new Error('Falha ao salvar');
-        } catch (error) {
-            console.error(error);
-            alert('Não foi possível salvar no servidor. O backup local será usado apenas neste navegador.');
+        // Função local para persistir no localStorage
+        function persistLocal() {
             let savedBudgets = JSON.parse(localStorage.getItem('local_budgets') || '[]');
-            const index = savedBudgets.findIndex(b => b.clientData.docId === docId);
+            const index = savedBudgets.findIndex(b => (b.clientData && b.clientData.docId) === docId);
             if (index > -1) savedBudgets[index] = budget; else savedBudgets.push(budget);
             localStorage.setItem('local_budgets', JSON.stringify(savedBudgets));
         }
 
-        alert('Orçamento gravado com sucesso no servidor!');
+        if (SERVER_SAVE_ENABLED) {
+            try {
+                const response = await fetch('/api/budgets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(budget)
+                });
+                if (!response.ok) throw new Error('Falha ao salvar');
+                savedToServer = true;
+            } catch (error) {
+                console.error('Erro ao enviar para o servidor:', error);
+                persistLocal();
+                savedToServer = false;
+            }
+        } else {
+            // Em modo sem servidor, salva sempre localmente
+            persistLocal();
+            savedToServer = false;
+        }
+
+        if (savedToServer) {
+            alert('Orçamento gravado com sucesso no servidor!');
+        } else {
+            alert('Orçamento salvo localmente.');
+        }
         isEditing = false;
         window.location.href = `salvos.html?view=${encodeURIComponent(docId)}`;
     }
@@ -2026,14 +2226,25 @@
     (function initValidityBinding(){
         const daysInput = document.getElementById('validity-days');
         const hidden = document.getElementById('validity');
-        function syncValidity(){
-            const v = parseInt(daysInput.value, 10);
-            const days = isNaN(v) || v < 1 ? 10 : v;
-            hidden.value = days + ' dias';
+        function setFromProfile(){
+            try {
+                const profile = JSON.parse(localStorage.getItem('profile_settings') || '{}');
+                const days = parseInt(profile.validityDays || 10, 10);
+                hidden.value = (isNaN(days) ? 10 : days) + ' dias';
+            } catch(e) { hidden.value = '10 dias'; }
         }
-        daysInput.addEventListener('input', syncValidity);
-        daysInput.addEventListener('focus', function(){ this.select(); });
-        syncValidity();
+        if (daysInput) {
+            function syncValidity(){
+                const v = parseInt(daysInput.value, 10);
+                const days = isNaN(v) || v < 1 ? 15 : v;
+                hidden.value = days + ' dias';
+            }
+            daysInput.addEventListener('input', syncValidity);
+            daysInput.addEventListener('focus', function(){ this.select(); });
+            syncValidity();
+        } else {
+            setFromProfile();
+        }
     })();
 
 
@@ -2106,7 +2317,7 @@
             budget.materials.push({
                 name: row.querySelector('.mat-name').value,
                 brand: row.querySelector('.mat-brand').value,
-                price: parseFloat(row.querySelector('.mat-price').value) || 0,
+                price: 0,
                 qty: parseFloat(row.querySelector('.mat-qty').value) || 0
             });
         });
