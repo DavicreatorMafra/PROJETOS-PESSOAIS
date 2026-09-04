@@ -756,6 +756,23 @@
             font-size: 10px !important;
             line-height: 1.2 !important;
         }
+
+        body.mobile-print {
+            min-height: 0 !important;
+            height: auto !important;
+        }
+
+        body.mobile-print #page-4,
+        body.mobile-print .pdf-preview {
+            page-break-after: avoid !important;
+            break-after: avoid-page !important;
+        }
+
+        body.mobile-print .pdf-print-scope,
+        body.mobile-print .pdf-financial-block {
+            page-break-inside: auto !important;
+            break-inside: auto !important;
+        }
         /* Forçar tamanho A4 e regras de quebra de página para exportação/PDF */
         @page { size: A4; margin: 8mm; }
         #pdf-export-wrapper, .pdf-preview {
@@ -2019,6 +2036,8 @@
         exportWrapper.style.visibility = 'visible';
         exportWrapper.style.overflow = 'visible';
         exportWrapper.style.height = 'auto';
+        exportWrapper.style.minHeight = '0';
+        exportWrapper.style.margin = '0';
         // Para modo 'materials', clona apenas o cabeçalho e a seção de materiais
         if (typeof viewMode !== 'undefined' && viewMode === 'materials') {
             const clone = document.createElement('div');
@@ -2072,6 +2091,7 @@
                     totals.style.fontSize = '12px';
                 }
                 }
+                exportWrapper.style.height = `${exportWrapper.scrollHeight}px`;
                 const header = exportWrapper.querySelector('.pdf-header');
                 if (header) {
                 header.style.display = 'flex';
@@ -2097,6 +2117,7 @@
                 }
                 }
             }
+            exportWrapper.style.height = `${exportWrapper.scrollHeight}px`;
             // Scroll into view to help some browsers render the element correctly
             try { exportWrapper.scrollIntoView({ block: 'start' }); } catch(e) {}
         });
@@ -2108,6 +2129,7 @@
         // Rebuild the current preview before cloning it, including mobile/share flows.
         buildPDFContent();
         const exportElement = buildPdfExportElement();
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
         const opt = {
             margin: [8, 8, 8, 8],
             filename,
@@ -2119,7 +2141,7 @@
                 logging: false,
                 useCORS: true
             },
-            pagebreak: { mode: ['css', 'legacy'] },
+            pagebreak: { mode: isMobile ? ['css'] : ['css', 'legacy'] },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
@@ -2133,6 +2155,7 @@
         exportElement.style.opacity = '1';
         exportElement.style.pointerEvents = 'none';
         exportElement.style.display = 'block';
+        exportElement.style.visibility = 'visible';
 
         // Wait for fonts and images to load to avoid blank pages
         async function waitForResources(root, timeout = 5000) {
@@ -2159,6 +2182,11 @@
         await new Promise(resolve => setTimeout(resolve, 150));
         await waitForResources(exportElement, 4000);
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        await new Promise(resolve => setTimeout(resolve, 250));
+        opt.html2canvas.width = exportElement.scrollWidth;
+        opt.html2canvas.height = exportElement.scrollHeight;
+        opt.html2canvas.windowWidth = exportElement.scrollWidth;
+        opt.html2canvas.windowHeight = exportElement.scrollHeight;
 
         try {
             if (saveToDisk) {
