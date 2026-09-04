@@ -705,68 +705,56 @@
             .header-title, .welcome-screen, .menu-buttons, .navigation-actions { display: none !important; }
             /* Não sobrescrever o padding/borda do .pdf-preview — preserva aparência da tela */
             /* Ajustes para legibilidade em impressão, mantendo estilos principais */
-            .pdf-preview, #pdf-export-wrapper {
-                width: 100% !important;
-                max-width: 100% !important;
-                padding: 12mm !important;
-                font-size: 12px;
-                line-height: 1.4;
-                color: #000;
-                overflow: visible !important;
-            }
+            .pdf-preview, #pdf-export-wrapper { font-size: 12px; line-height: 1.25; color: #000; }
             .pdf-table th, .pdf-table td { font-size: 12px; }
             img { max-width: 100%; height: auto; }
+        }
 
-            /* A impressão usa sempre o layout de computador, inclusive em celulares. */
-            .pdf-header {
-                display: flex !important;
-                align-items: center !important;
-                gap: 12px !important;
-            }
+        /* Somente a impressão iniciada no celular usa o ajuste compacto. */
+        body.mobile-print .pdf-preview,
+        body.mobile-print #pdf-export-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 8mm !important;
+            overflow: visible !important;
+        }
 
-            .pdf-header > div:first-child {
-                flex: 0 0 auto !important;
-                width: auto !important;
-                max-width: none !important;
-            }
+        body.mobile-print .pdf-header {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
 
-            .pdf-header > div:nth-child(2) {
-                display: block !important;
-                flex: 1 1 auto !important;
-            }
+        body.mobile-print .pdf-header > div:first-child {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            max-width: 60% !important;
+        }
 
-            .pdf-header > div:last-child {
-                flex: 0 0 auto !important;
-                width: auto !important;
-                min-width: 0 !important;
-                max-width: 40% !important;
-                padding-top: 0 !important;
-                border-top: none !important;
-            }
+        body.mobile-print .pdf-header > div:nth-child(2) {
+            display: block !important;
+            flex: 1 1 auto !important;
+        }
 
-            .pdf-grid {
-                grid-template-columns: 1fr 1fr !important;
-                gap: 15px !important;
-            }
+        body.mobile-print .pdf-header > div:last-child {
+            flex: 0 0 auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: 40% !important;
+            padding-top: 0 !important;
+            border-top: none !important;
+        }
 
-            .pdf-section-title {
-                font-size: 11px !important;
-                padding: 4px 8px !important;
-                margin-top: 15px !important;
-                margin-bottom: 8px !important;
-            }
+        body.mobile-print .pdf-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+        }
 
-            .pdf-table th,
-            .pdf-table td {
-                padding: 6px !important;
-                font-size: 12px !important;
-                line-height: normal !important;
-            }
-
-            .pdf-totals {
-                width: 300px !important;
-                font-size: 12px !important;
-            }
+        body.mobile-print .pdf-table th,
+        body.mobile-print .pdf-table td {
+            padding: 4px !important;
+            font-size: 10px !important;
+            line-height: 1.2 !important;
         }
         /* Forçar tamanho A4 e regras de quebra de página para exportação/PDF */
         @page { size: A4; margin: 8mm; }
@@ -1190,7 +1178,7 @@
             <div>
                 <button class="btn" id="btn-save" style="background-color: var(--success-color); display: none;" onclick="saveBudgetToLocalStorage()">Salvar 💾</button>
                 <button class="btn" id="btn-next" onclick="changeStep(1)">Avançar</button>
-                <button class="btn" id="btn-print" style="background-color: #64748b; display: none;" onclick="window.print()">IMPRIMIR 🖨️</button>
+                <button class="btn" id="btn-print" style="background-color: #64748b; display: none;" onclick="preparePrint()">IMPRIMIR 🖨️</button>
                 <button class="btn" id="btn-whatsapp" style="background-color: #25d366; display: none;" onclick="shareBudget()">Enviar ✈️</button>
                 <button class="btn" id="btn-map-route" style="background-color: #0284c7; display: none;" onclick="openMapRoute()">🗺️ Abrir Rota no Mapa</button>
                 <button class="btn" id="btn-edit" style="background-color: #f59e0b; display: none;" onclick="editCurrentBudget()">✏️ Editar</button>
@@ -2001,12 +1989,21 @@
     }
 
     // --- EXPORTAR PDF E INTEGRAR COM WHATSAPP ---
+    function preparePrint() {
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+        document.body.classList.toggle('mobile-print', isMobile);
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('mobile-print');
+        }, { once: true });
+        window.print();
+    }
+
     function buildPdfExportElement() {
         const source = document.getElementById('pdf-content');
         const exportWrapper = document.createElement('div');
         exportWrapper.id = 'pdf-export-wrapper';
         // Must be visible to html2canvas. Keep it visually unobtrusive via opacity and pointer-events.
-        exportWrapper.style.position = 'fixed';
+        exportWrapper.style.position = 'absolute';
         exportWrapper.style.left = '0';
         exportWrapper.style.top = '0';
         exportWrapper.style.width = '210mm';
@@ -2021,6 +2018,7 @@
         exportWrapper.style.pointerEvents = 'none';
         exportWrapper.style.visibility = 'visible';
         exportWrapper.style.overflow = 'visible';
+        exportWrapper.style.height = 'auto';
         // Para modo 'materials', clona apenas o cabeçalho e a seção de materiais
         if (typeof viewMode !== 'undefined' && viewMode === 'materials') {
             const clone = document.createElement('div');
