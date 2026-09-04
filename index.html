@@ -1114,11 +1114,11 @@
                     <table class="pdf-table" id="pdf-labor-table">
                         <thead>
                             <tr>
-                                <th style="text-align: left; width: 38%;">Serviço Executado</th>
-                                <th style="text-align: left; width: 27%;">Item/Descrição</th>
+                                <th style="text-align: left; width: 40%;">Serviço Executado</th>
+                                <th style="text-align: left; width: 30%;">Item/Descrição</th>
                                 <th style="text-align: right; width: 15%;">Unitário</th>
-                                <th style="text-align: center; width: 8%;">Qtd</th>
-                                <th style="text-align: right; width: 12%;">Total</th>
+                                <th class="pdf-quantity-header" style="text-align: center; width: 5%; white-space: nowrap;">Qtd</th>
+                                <th style="text-align: right; width: 15%;">Total</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -2044,15 +2044,12 @@
         const source = document.getElementById('pdf-content');
         const exportWrapper = document.createElement('div');
         exportWrapper.id = 'pdf-export-wrapper';
-        const isMobileViewport = window.matchMedia('(max-width: 767px)').matches;
-        const sourceWidth = Math.ceil(source.getBoundingClientRect().width);
         // Must be visible to html2canvas. Keep it visually unobtrusive via opacity and pointer-events.
         exportWrapper.style.position = 'absolute';
         exportWrapper.style.left = '0';
-        exportWrapper.style.right = '0';
         exportWrapper.style.top = '0';
-        // No celular, preserve a mesma largura usada pelo preview visível.
-        exportWrapper.style.width = isMobileViewport ? `${sourceWidth}px` : '194mm';
+        // A4 (210mm) menos as margens de 8mm usadas pelo html2pdf.
+        exportWrapper.style.width = '194mm';
         exportWrapper.style.minHeight = 'auto';
         exportWrapper.style.padding = '0';
         exportWrapper.style.boxSizing = 'border-box';
@@ -2067,12 +2064,25 @@
         exportWrapper.style.height = 'auto';
         exportWrapper.style.minHeight = '0';
         exportWrapper.style.margin = '0 auto';
-        // Clone o preview completo para manter exatamente a estrutura visível.
-        exportWrapper.appendChild(source.cloneNode(true));
+        // Para modo 'materials', clona apenas o cabeçalho e a seção de materiais.
+        if (typeof viewMode !== 'undefined' && viewMode === 'materials') {
+            const clone = document.createElement('div');
+            const header = source.querySelector('.pdf-header');
+            const materials = source.querySelector('#pdf-materials-section');
+            if (header) clone.appendChild(header.cloneNode(true));
+            if (materials) clone.appendChild(materials.cloneNode(true));
+            exportWrapper.appendChild(clone);
+        } else {
+            exportWrapper.appendChild(source.cloneNode(true));
+        }
         document.body.appendChild(exportWrapper);
 
-        // Aguarda o layout do clone sem substituir estilos da visualização.
+        // Normalize o clone para o formato A4 usado no PDF.
         requestAnimationFrame(() => {
+            exportWrapper.querySelectorAll('*').forEach(el => {
+                el.style.maxWidth = '100%';
+                el.style.wordBreak = 'break-word';
+            });
             exportWrapper.style.height = `${exportWrapper.scrollHeight}px`;
             // Scroll into view to help some browsers render the element correctly
             try { exportWrapper.scrollIntoView({ block: 'start' }); } catch(e) {}
