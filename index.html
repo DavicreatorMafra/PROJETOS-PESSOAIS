@@ -751,6 +751,73 @@
             .pdf-preview, #pdf-export-wrapper { font-size: 12px; line-height: 1.25; color: #000; }
             .pdf-table th, .pdf-table td { font-size: 12px; }
             img { max-width: 100%; height: auto; }
+
+            .pdf-header {
+                display: flex !important;
+                grid-template-columns: none !important;
+                align-items: center !important;
+            }
+
+            .pdf-header > div:first-child {
+                flex: 1 1 auto !important;
+                max-width: none !important;
+            }
+
+            .pdf-header > div:nth-child(2) {
+                display: block !important;
+                flex: 0 1 8% !important;
+            }
+
+            .pdf-header > div:last-child {
+                flex: 0 0 auto !important;
+                min-width: 185px !important;
+                max-width: 34% !important;
+                border-top: none !important;
+                padding-top: 0 !important;
+            }
+
+            .pdf-preview {
+                width: 210mm !important;
+                max-width: 210mm !important;
+                padding: 12mm !important;
+                font-size: 12px !important;
+                line-height: 1.4 !important;
+                overflow: visible !important;
+            }
+
+            .pdf-header img {
+                max-width: 170px !important;
+                max-height: 90px !important;
+            }
+
+            .pdf-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 15px !important;
+                margin-bottom: 15px !important;
+            }
+
+            .pdf-section-title {
+                font-size: 11px !important;
+                padding: 4px 8px !important;
+                margin-top: 15px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .pdf-table {
+                margin-bottom: 15px !important;
+            }
+
+            .pdf-table th,
+            .pdf-table td {
+                padding: 6px !important;
+                font-size: 12px !important;
+                line-height: normal !important;
+            }
+
+            .pdf-totals {
+                width: 300px !important;
+                font-size: 12px !important;
+            }
         }
         /* Forçar tamanho A4 e regras de quebra de página para exportação/PDF */
         @page { size: A4; margin: 8mm; }
@@ -2010,6 +2077,7 @@
         exportWrapper.style.opacity = '0';
         exportWrapper.style.pointerEvents = 'none';
         exportWrapper.style.visibility = 'visible';
+        exportWrapper.style.overflow = 'visible';
         // Para modo 'materials', clona apenas o cabeçalho e a seção de materiais
         if (typeof viewMode !== 'undefined' && viewMode === 'materials') {
             const clone = document.createElement('div');
@@ -2027,8 +2095,66 @@
         requestAnimationFrame(() => {
             exportWrapper.querySelectorAll('*').forEach(el => {
                 el.style.maxWidth = '100%';
-                el.style.wordBreak = 'break-word';
+                el.style.wordBreak = 'normal';
+                el.style.overflowWrap = 'break-word';
             });
+            const preview = exportWrapper.querySelector('.pdf-preview');
+            if (preview) {
+                preview.style.width = '210mm';
+                preview.style.maxWidth = '210mm';
+                preview.style.padding = '12mm';
+                preview.style.fontSize = '12px';
+                preview.style.lineHeight = '1.4';
+                preview.style.overflow = 'visible';
+                preview.querySelectorAll('.pdf-grid').forEach(grid => {
+                    grid.style.gridTemplateColumns = '1fr 1fr';
+                    grid.style.gap = '15px';
+                    grid.style.marginBottom = '15px';
+                });
+                preview.querySelectorAll('.pdf-section-title').forEach(title => {
+                    title.style.fontSize = '11px';
+                    title.style.padding = '4px 8px';
+                    title.style.marginTop = '15px';
+                    title.style.marginBottom = '8px';
+                });
+                preview.querySelectorAll('.pdf-table').forEach(table => {
+                    table.style.marginBottom = '15px';
+                    table.querySelectorAll('th, td').forEach(cell => {
+                        cell.style.padding = '6px';
+                        cell.style.fontSize = '12px';
+                        cell.style.lineHeight = 'normal';
+                    });
+                });
+                const totals = preview.querySelector('.pdf-totals');
+                if (totals) {
+                    totals.style.width = '300px';
+                    totals.style.fontSize = '12px';
+                }
+            }
+            const header = exportWrapper.querySelector('.pdf-header');
+            if (header) {
+                header.style.display = 'flex';
+                header.style.gridTemplateColumns = '';
+                header.style.alignItems = 'center';
+                const headerLeft = header.children[0];
+                const headerSpacer = header.children[1];
+                const headerRight = header.children[2];
+                if (headerLeft) {
+                    headerLeft.style.flex = '1 1 auto';
+                    headerLeft.style.maxWidth = 'none';
+                }
+                if (headerSpacer) {
+                    headerSpacer.style.display = 'block';
+                    headerSpacer.style.flex = '0 1 8%';
+                }
+                if (headerRight) {
+                    headerRight.style.flex = '0 0 auto';
+                    headerRight.style.minWidth = '185px';
+                    headerRight.style.maxWidth = '34%';
+                    headerRight.style.borderTop = 'none';
+                    headerRight.style.paddingTop = '0';
+                }
+            }
             // Scroll into view to help some browsers render the element correctly
             try { exportWrapper.scrollIntoView({ block: 'start' }); } catch(e) {}
         });
@@ -2037,6 +2163,8 @@
     }
 
     async function exportBudgetPdf(filename, saveToDisk = false) {
+        // Rebuild the current preview before cloning it, including mobile/share flows.
+        buildPDFContent();
         const exportElement = buildPdfExportElement();
         const opt = {
             margin: [8, 8, 8, 8],
@@ -2088,6 +2216,7 @@
         // Wait briefly and for resources
         await new Promise(resolve => setTimeout(resolve, 150));
         await waitForResources(exportElement, 4000);
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
         try {
             if (saveToDisk) {
