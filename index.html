@@ -708,6 +708,31 @@
             .pdf-preview, #pdf-export-wrapper { font-size: 12px; line-height: 1.25; color: #000; }
             .pdf-table th, .pdf-table td { font-size: 12px; }
             img { max-width: 100%; height: auto; }
+
+            /* Mantém o cabeçalho impresso igual ao cabeçalho da visualização. */
+            .pdf-header {
+                display: flex !important;
+                justify-content: space-between !important;
+                align-items: center !important;
+                column-gap: 12px !important;
+            }
+
+            .pdf-header > div:first-child {
+                flex: 0 0 auto !important;
+                width: auto !important;
+                max-width: none !important;
+            }
+
+            .pdf-header > div:nth-child(2) {
+                display: block !important;
+                flex: 1 1 auto !important;
+            }
+
+            .pdf-header > div:last-child {
+                flex: 0 0 auto !important;
+                width: auto !important;
+                text-align: right !important;
+            }
         }
 
         /* Somente a impressão iniciada no celular usa o ajuste compacto. */
