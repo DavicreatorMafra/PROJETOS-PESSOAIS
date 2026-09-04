@@ -2044,13 +2044,15 @@
         const source = document.getElementById('pdf-content');
         const exportWrapper = document.createElement('div');
         exportWrapper.id = 'pdf-export-wrapper';
+        const isMobileViewport = window.matchMedia('(max-width: 767px)').matches;
+        const sourceWidth = Math.ceil(source.getBoundingClientRect().width);
         // Must be visible to html2canvas. Keep it visually unobtrusive via opacity and pointer-events.
         exportWrapper.style.position = 'absolute';
         exportWrapper.style.left = '0';
         exportWrapper.style.right = '0';
         exportWrapper.style.top = '0';
-        // A4 (210mm) menos as margens de 8mm usadas pelo html2pdf.
-        exportWrapper.style.width = '194mm';
+        // No celular, preserve a mesma largura usada pelo preview visível.
+        exportWrapper.style.width = isMobileViewport ? `${sourceWidth}px` : '194mm';
         exportWrapper.style.minHeight = 'auto';
         exportWrapper.style.padding = '0';
         exportWrapper.style.boxSizing = 'border-box';
@@ -2065,94 +2067,12 @@
         exportWrapper.style.height = 'auto';
         exportWrapper.style.minHeight = '0';
         exportWrapper.style.margin = '0 auto';
-        // Para modo 'materials', clona apenas o cabeçalho e a seção de materiais
-        if (typeof viewMode !== 'undefined' && viewMode === 'materials') {
-            const clone = document.createElement('div');
-            const header = source.querySelector('.pdf-header');
-            const materials = source.querySelector('#pdf-materials-section');
-            if (header) clone.appendChild(header.cloneNode(true));
-            if (materials) clone.appendChild(materials.cloneNode(true));
-            exportWrapper.appendChild(clone);
-        } else {
-            exportWrapper.appendChild(source.cloneNode(true));
-        }
+        // Clone o preview completo para manter exatamente a estrutura visível.
+        exportWrapper.appendChild(source.cloneNode(true));
         document.body.appendChild(exportWrapper);
 
-        // Ensure styles that might overflow are normalized for capture
+        // Aguarda o layout do clone sem substituir estilos da visualização.
         requestAnimationFrame(() => {
-            exportWrapper.querySelectorAll('*').forEach(el => {
-                el.style.maxWidth = '100%';
-                el.style.wordBreak = 'break-word';
-            });
-            if (window.matchMedia('(max-width: 767px)').matches) {
-                const preview = exportWrapper.querySelector('.pdf-preview');
-                if (preview) {
-                preview.style.width = '100%';
-                preview.style.maxWidth = '100%';
-                preview.style.padding = '8mm';
-                preview.style.marginLeft = '0';
-                preview.style.marginRight = '0';
-                preview.style.fontSize = '12px';
-                preview.style.lineHeight = '1.4';
-                preview.style.overflow = 'visible';
-                preview.querySelectorAll('.pdf-grid').forEach(grid => {
-                    grid.style.gridTemplateColumns = '1fr 1fr';
-                    grid.style.gap = '15px';
-                    grid.style.marginBottom = '15px';
-                });
-                preview.querySelectorAll('.pdf-section-title').forEach(title => {
-                    title.style.fontSize = '11px';
-                    title.style.padding = '4px 8px';
-                    title.style.marginTop = '15px';
-                    title.style.marginBottom = '8px';
-                });
-                preview.querySelectorAll('.pdf-table').forEach(table => {
-                    table.style.marginBottom = '15px';
-                    table.querySelectorAll('th, td').forEach(cell => {
-                        cell.style.padding = '6px';
-                        cell.style.fontSize = '12px';
-                        cell.style.lineHeight = 'normal';
-                    });
-                });
-                const totals = preview.querySelector('.pdf-totals');
-                if (totals) {
-                    totals.style.width = '300px';
-                    totals.style.fontSize = '12px';
-                }
-                }
-                exportWrapper.style.height = `${exportWrapper.scrollHeight}px`;
-            }
-            const header = exportWrapper.querySelector('.pdf-header');
-            const exportedPreview = exportWrapper.querySelector('.pdf-preview');
-            if (exportedPreview) {
-                exportedPreview.style.marginLeft = '0';
-                exportedPreview.style.marginRight = '0';
-            }
-            if (header) {
-                header.style.display = 'grid';
-                header.style.gridTemplateColumns = 'minmax(0, 1fr) auto';
-                header.style.alignItems = 'start';
-                header.style.columnGap = '12px';
-                const headerLeft = header.children[0];
-                const headerSpacer = header.children[1];
-                const headerRight = header.children[2];
-                if (headerLeft) {
-                    headerLeft.style.width = '100%';
-                    headerLeft.style.maxWidth = 'none';
-                    headerLeft.style.minWidth = '0';
-                    headerLeft.style.alignSelf = 'start';
-                }
-                if (headerSpacer) headerSpacer.style.display = 'none';
-                if (headerRight) {
-                    headerRight.style.width = 'auto';
-                    headerRight.style.minWidth = '0';
-                    headerRight.style.maxWidth = 'none';
-                    headerRight.style.textAlign = 'right';
-                    headerRight.style.alignSelf = 'start';
-                    headerRight.style.paddingTop = '0';
-                    headerRight.style.borderTop = 'none';
-                }
-            }
             exportWrapper.style.height = `${exportWrapper.scrollHeight}px`;
             // Scroll into view to help some browsers render the element correctly
             try { exportWrapper.scrollIntoView({ block: 'start' }); } catch(e) {}
