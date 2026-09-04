@@ -2022,6 +2022,7 @@
         // Must be visible to html2canvas. Keep it visually unobtrusive via opacity and pointer-events.
         exportWrapper.style.position = 'absolute';
         exportWrapper.style.left = '0';
+        exportWrapper.style.right = '0';
         exportWrapper.style.top = '0';
         // A4 (210mm) menos as margens de 8mm usadas pelo html2pdf.
         exportWrapper.style.width = '194mm';
@@ -2038,7 +2039,7 @@
         exportWrapper.style.overflow = 'visible';
         exportWrapper.style.height = 'auto';
         exportWrapper.style.minHeight = '0';
-        exportWrapper.style.margin = '0';
+        exportWrapper.style.margin = '0 auto';
         // Para modo 'materials', clona apenas o cabeçalho e a seção de materiais
         if (typeof viewMode !== 'undefined' && viewMode === 'materials') {
             const clone = document.createElement('div');
@@ -2064,6 +2065,8 @@
                 preview.style.width = '100%';
                 preview.style.maxWidth = '100%';
                 preview.style.padding = '8mm';
+                preview.style.marginLeft = '0';
+                preview.style.marginRight = '0';
                 preview.style.fontSize = '12px';
                 preview.style.lineHeight = '1.4';
                 preview.style.overflow = 'visible';
@@ -2095,6 +2098,11 @@
                 exportWrapper.style.height = `${exportWrapper.scrollHeight}px`;
             }
             const header = exportWrapper.querySelector('.pdf-header');
+            const exportedPreview = exportWrapper.querySelector('.pdf-preview');
+            if (exportedPreview) {
+                exportedPreview.style.marginLeft = '0';
+                exportedPreview.style.marginRight = '0';
+            }
             if (header) {
                 header.style.display = 'grid';
                 header.style.gridTemplateColumns = 'minmax(0, 1fr) auto';
