@@ -448,49 +448,6 @@
             word-break: normal;
         }
 
-        .pdf-header > div:first-child {
-            flex: 1 1 auto !important;
-            min-width: 0;
-        }
-
-        .pdf-header > div:nth-child(2) {
-            flex: 0 1 8% !important;
-        }
-
-        .pdf-header > div:last-child {
-            flex: 0 0 auto !important;
-            min-width: 185px;
-            max-width: 34%;
-        }
-
-        #pdf-left-header,
-        #pdf-left-header > div {
-            min-width: 0;
-            max-width: 100%;
-        }
-
-        #pdf-left-header h2 {
-            font-size: 17px !important;
-            line-height: 1.15;
-            overflow-wrap: break-word;
-        }
-
-        #pdf-left-header img {
-            max-width: 170px !important;
-            max-height: 90px !important;
-        }
-
-        #pdf-left-header [style*="inline-flex"] {
-            display: flex !important;
-            flex-wrap: wrap;
-            align-items: flex-start !important;
-            gap: 2px 4px !important;
-        }
-
-        #pdf-left-header [style*="inline-flex"] strong {
-            min-width: auto !important;
-        }
-
         .pdf-header {
             display: flex;
             justify-content: space-between;
@@ -748,52 +705,48 @@
             .header-title, .welcome-screen, .menu-buttons, .navigation-actions { display: none !important; }
             /* Não sobrescrever o padding/borda do .pdf-preview — preserva aparência da tela */
             /* Ajustes para legibilidade em impressão, mantendo estilos principais */
-            .pdf-preview, #pdf-export-wrapper { font-size: 12px; line-height: 1.25; color: #000; }
+            .pdf-preview, #pdf-export-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 12mm !important;
+                font-size: 12px;
+                line-height: 1.4;
+                color: #000;
+                overflow: visible !important;
+            }
             .pdf-table th, .pdf-table td { font-size: 12px; }
             img { max-width: 100%; height: auto; }
 
+            /* A impressão usa sempre o layout de computador, inclusive em celulares. */
             .pdf-header {
                 display: flex !important;
-                grid-template-columns: none !important;
                 align-items: center !important;
+                gap: 12px !important;
             }
 
             .pdf-header > div:first-child {
-                flex: 1 1 auto !important;
+                flex: 0 0 auto !important;
+                width: auto !important;
                 max-width: none !important;
             }
 
             .pdf-header > div:nth-child(2) {
                 display: block !important;
-                flex: 0 1 8% !important;
+                flex: 1 1 auto !important;
             }
 
             .pdf-header > div:last-child {
                 flex: 0 0 auto !important;
-                min-width: 185px !important;
-                max-width: 34% !important;
-                border-top: none !important;
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: 40% !important;
                 padding-top: 0 !important;
-            }
-
-            .pdf-preview {
-                width: 210mm !important;
-                max-width: 210mm !important;
-                padding: 12mm !important;
-                font-size: 12px !important;
-                line-height: 1.4 !important;
-                overflow: visible !important;
-            }
-
-            .pdf-header img {
-                max-width: 170px !important;
-                max-height: 90px !important;
+                border-top: none !important;
             }
 
             .pdf-grid {
                 grid-template-columns: 1fr 1fr !important;
                 gap: 15px !important;
-                margin-bottom: 15px !important;
             }
 
             .pdf-section-title {
@@ -801,10 +754,6 @@
                 padding: 4px 8px !important;
                 margin-top: 15px !important;
                 margin-bottom: 8px !important;
-            }
-
-            .pdf-table {
-                margin-bottom: 15px !important;
             }
 
             .pdf-table th,
@@ -827,12 +776,6 @@
             print-color-adjust: exact;
         }
 
-        @media print {
-            #pdf-export-wrapper, .pdf-preview {
-                width: 210mm;
-                max-width: 210mm;
-            }
-        }
         /* Permitir quebras automáticas entre páginas, evitar quebra dentro de linhas/entradas */
         .pdf-print-scope { page-break-inside: avoid; }
         .pdf-section-title { page-break-after: avoid; page-break-inside: avoid; }
@@ -2095,11 +2038,11 @@
         requestAnimationFrame(() => {
             exportWrapper.querySelectorAll('*').forEach(el => {
                 el.style.maxWidth = '100%';
-                el.style.wordBreak = 'normal';
-                el.style.overflowWrap = 'break-word';
+                el.style.wordBreak = 'break-word';
             });
-            const preview = exportWrapper.querySelector('.pdf-preview');
-            if (preview) {
+            if (window.matchMedia('(max-width: 767px)').matches) {
+                const preview = exportWrapper.querySelector('.pdf-preview');
+                if (preview) {
                 preview.style.width = '210mm';
                 preview.style.maxWidth = '210mm';
                 preview.style.padding = '12mm';
@@ -2130,9 +2073,9 @@
                     totals.style.width = '300px';
                     totals.style.fontSize = '12px';
                 }
-            }
-            const header = exportWrapper.querySelector('.pdf-header');
-            if (header) {
+                }
+                const header = exportWrapper.querySelector('.pdf-header');
+                if (header) {
                 header.style.display = 'flex';
                 header.style.gridTemplateColumns = '';
                 header.style.alignItems = 'center';
@@ -2153,6 +2096,7 @@
                     headerRight.style.maxWidth = '34%';
                     headerRight.style.borderTop = 'none';
                     headerRight.style.paddingTop = '0';
+                }
                 }
             }
             // Scroll into view to help some browsers render the element correctly
