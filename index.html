@@ -435,6 +435,62 @@
             box-sizing: border-box;
         }
 
+        .pdf-preview,
+        .pdf-preview * {
+            min-width: 0;
+        }
+
+        .pdf-preview p,
+        .pdf-preview span,
+        .pdf-preview td,
+        .pdf-preview th {
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+
+        .pdf-header > div:first-child {
+            flex: 1 1 auto !important;
+            min-width: 0;
+        }
+
+        .pdf-header > div:nth-child(2) {
+            flex: 0 1 8% !important;
+        }
+
+        .pdf-header > div:last-child {
+            flex: 0 0 auto !important;
+            min-width: 185px;
+            max-width: 34%;
+        }
+
+        #pdf-left-header,
+        #pdf-left-header > div {
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        #pdf-left-header h2 {
+            font-size: 17px !important;
+            line-height: 1.15;
+            overflow-wrap: break-word;
+        }
+
+        #pdf-left-header img {
+            max-width: 170px !important;
+            max-height: 90px !important;
+        }
+
+        #pdf-left-header [style*="inline-flex"] {
+            display: flex !important;
+            flex-wrap: wrap;
+            align-items: flex-start !important;
+            gap: 2px 4px !important;
+        }
+
+        #pdf-left-header [style*="inline-flex"] strong {
+            min-width: auto !important;
+        }
+
         .pdf-header {
             display: flex;
             justify-content: space-between;
@@ -467,6 +523,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 15px;
+            table-layout: fixed;
         }
 
         .pdf-table th {
@@ -507,6 +564,107 @@
             border-bottom: none;
             font-weight: bold;
             background-color: #f2f2f2;
+        }
+
+        @media (max-width: 767px) {
+            body {
+                padding: 6px;
+            }
+
+            .container {
+                padding: 8px;
+                border-radius: 8px;
+            }
+
+            #page-4 {
+                width: 100%;
+                overflow: hidden;
+            }
+
+            #page-4 > .no-print {
+                font-size: 12px !important;
+                line-height: 1.35;
+                padding: 9px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .pdf-preview {
+                width: 100%;
+                max-width: 100%;
+                padding: 7mm 5mm;
+                margin-top: 10px;
+                font-size: 10px;
+                line-height: 1.3;
+                overflow: hidden;
+            }
+
+            .pdf-header {
+                display: grid;
+                grid-template-columns: 1fr;
+                align-items: start;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+
+            .pdf-header > div:first-child {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .pdf-header > div:nth-child(2) {
+                display: none;
+            }
+
+            .pdf-header > div:last-child {
+                width: 100%;
+                min-width: 0;
+                max-width: 100%;
+                padding-top: 5px;
+                border-top: 1px solid #d1d5db;
+                font-size: 9px !important;
+            }
+
+            .pdf-header img {
+                max-width: 130px !important;
+                max-height: 70px !important;
+            }
+
+            #pdf-left-header > div:first-child {
+                gap: 8px !important;
+            }
+
+            #pdf-left-header h2 {
+                font-size: 15px !important;
+            }
+
+            .pdf-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+
+            .pdf-section-title {
+                font-size: 9px;
+                padding: 4px 6px;
+                margin-top: 10px;
+                margin-bottom: 5px;
+            }
+
+            .pdf-table {
+                margin-bottom: 10px;
+            }
+
+            .pdf-table th,
+            .pdf-table td {
+                padding: 4px 3px;
+                font-size: 8px;
+                line-height: 1.25;
+            }
+
+            .pdf-totals {
+                width: min(100%, 250px);
+                font-size: 9px;
+            }
         }
 
         /* Media Queries Computador (PC) */
@@ -597,11 +755,16 @@
         /* Forçar tamanho A4 e regras de quebra de página para exportação/PDF */
         @page { size: A4; margin: 8mm; }
         #pdf-export-wrapper, .pdf-preview {
-            width: 210mm;
-            max-width: 210mm;
             box-sizing: border-box;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+        }
+
+        @media print {
+            #pdf-export-wrapper, .pdf-preview {
+                width: 210mm;
+                max-width: 210mm;
+            }
         }
         /* Permitir quebras automáticas entre páginas, evitar quebra dentro de linhas/entradas */
         .pdf-print-scope { page-break-inside: avoid; }
