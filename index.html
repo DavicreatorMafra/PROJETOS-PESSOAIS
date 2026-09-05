@@ -641,6 +641,77 @@
                 width: min(100%, 250px);
                 font-size: 9px;
             }
+
+            /* O PDF enviado pelo celular usa a largura A4; preserve uma escala legível. */
+            #pdf-export-wrapper .pdf-preview {
+                padding: 10mm 9mm !important;
+                font-size: 14px !important;
+                line-height: 1.45 !important;
+            }
+
+            #pdf-export-wrapper .pdf-header {
+                display: flex !important;
+                gap: 12px !important;
+                margin-bottom: 15px !important;
+            }
+
+            #pdf-export-wrapper .pdf-header > div:first-child {
+                width: auto !important;
+                max-width: 60% !important;
+            }
+
+            #pdf-export-wrapper .pdf-header > div:nth-child(2) {
+                display: block !important;
+            }
+
+            #pdf-export-wrapper .pdf-header > div:last-child {
+                width: auto !important;
+                max-width: 40% !important;
+                padding-top: 0 !important;
+                border-top: none !important;
+                font-size: 12px !important;
+            }
+
+            #pdf-export-wrapper .pdf-header img {
+                max-width: 170px !important;
+                max-height: 100px !important;
+            }
+
+            #pdf-export-wrapper #pdf-left-header h2 {
+                font-size: 20px !important;
+            }
+
+            #pdf-export-wrapper .pdf-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 14px !important;
+                margin-bottom: 15px !important;
+            }
+
+            #pdf-export-wrapper .pdf-section-title {
+                font-size: 13px !important;
+                padding: 6px 8px !important;
+                margin-top: 15px !important;
+                margin-bottom: 8px !important;
+            }
+
+            #pdf-export-wrapper .pdf-table {
+                margin-bottom: 15px !important;
+            }
+
+            #pdf-export-wrapper .pdf-table th,
+            #pdf-export-wrapper .pdf-table td {
+                padding: 7px 6px !important;
+                font-size: 12px !important;
+                line-height: 1.35 !important;
+            }
+
+            #pdf-export-wrapper #pdf-obs {
+                font-size: 12px !important;
+            }
+
+            #pdf-export-wrapper .pdf-totals {
+                font-size: 12px !important;
+            }
         }
 
         /* Media Queries Computador (PC) */
@@ -1115,7 +1186,7 @@
                 </div>
 
                 <div id="pdf-materials-section" class="pdf-print-scope">
-                    <div class="pdf-section-title">Materiais Aplicados</div>
+                    <div class="pdf-section-title">LISTA DE MATERIAIS</div>
                                     <table class="pdf-table" id="pdf-materials-table">
                                     <thead>
                                         <tr>
