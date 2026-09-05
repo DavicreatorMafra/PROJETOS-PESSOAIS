@@ -129,6 +129,8 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 8px;
+            position: relative;
+            width: 100%;
         }
 
         .header-title {
@@ -142,6 +144,10 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            position: absolute;
+            top: 0;
+            right: 0;
+            justify-content: flex-end;
         }
 
         .header-right {
@@ -156,7 +162,6 @@
             position: relative;
             padding: 0 10px;
         }
-
         .step-indicator::before {
             content: '';
             position: absolute;
@@ -524,6 +529,12 @@
         }
 
         @media (max-width: 767px) {
+            .header-navigation-top {
+                position: static;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
             body {
                 padding: 6px;
             }
@@ -941,6 +952,7 @@
             <div class="header-left">
                 <div class="header-title">Orçamento Técnico</div>
                 <div class="header-navigation-top">
+                    <button class="btn btn-secondary no-print" id="btn-back-saved-budgets" onclick="backToSavedBudgets()" style="display: none; padding: 6px 12px; font-size: 13px;">⬅ Voltar</button>
                     <button class="btn btn-secondary no-print" onclick="backToMainMenu()" style="padding: 6px 12px; font-size: 13px;">🏠 Menu Principal</button>
                 </div>
             </div>
@@ -1354,6 +1366,9 @@
             viewingSavedBudget = true;
             document.getElementById('page-welcome').style.display = 'none';
             document.getElementById('main-interface').style.display = 'block';
+            if (viewMode === 'full' || viewMode === 'materials') {
+                document.getElementById('btn-back-saved-budgets').style.display = 'inline-flex';
+            }
             populateBudgetFromStorage(budget);
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-4').classList.add('active');
@@ -1567,6 +1582,10 @@
         
         document.getElementById('page-welcome').classList.add('active');
         currentStep = 1;
+    }
+
+    function backToSavedBudgets() {
+        window.location.href = 'salvos.html';
     }
 
     // --- NAVEGAÇÃO DOS PASSOS ---
